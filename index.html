@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SF Battery — Warranty Management</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:14px;}
+
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a3a6b,#0f2247);}
+.lbox{background:#fff;border-radius:14px;padding:2.5rem 2rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+.llogo{width:56px;height:56px;background:#1a3a6b;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;margin:0 auto 1rem;}
+.ltitle{text-align:center;font-size:18px;font-weight:700;color:#1a3a6b;margin-bottom:4px;}
+.lsub{text-align:center;font-size:12px;color:#888;margin-bottom:1.5rem;}
+.lbox .fld{margin-bottom:14px;}
+.lbox label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;}
+.lbox input{width:100%;padding:10px 12px;border:1px solid #d0d7e3;border-radius:7px;font-size:14px;outline:none;}
+.lbox input:focus{border-color:#1a3a6b;}
+.lbtn{width:100%;padding:11px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;}
+.lbtn:hover{background:#153060;}
+.lerr{background:#fde8e8;color:#842029;border-radius:6px;padding:8px 12px;font-size:13px;margin-top:10px;display:none;}
+.lload{text-align:center;color:#888;font-size:13px;padding:8px;display:none;}
+
+#appScreen{display:none;}
+.app{max-width:1200px;margin:0 auto;padding:1rem;}
+
+.hdr{display:flex;align-items:center;gap:12px;background:#fff;border-radius:10px;padding:.85rem 1.25rem;margin-bottom:.75rem;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.logo{width:40px;height:40px;background:#1a3a6b;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;}
+.hdr-title{font-size:15px;font-weight:700;color:#1a3a6b;}
+.hdr-sub{font-size:11px;color:#888;}
+.hdr-r{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.ubadge{font-size:12px;color:#555;background:#f0f2f5;padding:5px 10px;border-radius:6px;}
+.lout{padding:5px 12px;font-size:12px;border:1px solid #d0d7e3;border-radius:6px;background:#fff;color:#555;cursor:pointer;}
+.lout:hover{background:#fde8e8;color:#842029;}
+.sdot{width:8px;height:8px;border-radius:50%;background:#1a7a4a;display:inline-block;margin-right:4px;}
+
+.nav{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:.75rem;}
+.nb{padding:6px 12px;font-size:12px;border:1px solid #d0d7e3;border-radius:7px;background:#fff;color:#555;cursor:pointer;font-weight:500;white-space:nowrap;transition:all .15s;}
+.nb:hover{background:#eef2fa;color:#1a3a6b;}
+.nb.on{background:#1a3a6b;color:#fff;border-color:#1a3a6b;}
+.nb.warn{border-color:#c0392b;color:#c0392b;}
+.nb.warn.on{background:#c0392b;color:#fff;}
+
+.panel{display:none;}.panel.on{display:block;}
+
+.card{background:#fff;border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.stitle{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f2f5;}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+
+.met{background:#f7f9fc;border-radius:8px;padding:.75rem 1rem;border:1px solid #e8ecf3;}
+.ml{font-size:11px;color:#888;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.mv{font-size:22px;font-weight:700;}
+
+.fld{margin-bottom:10px;}
+.fld label{display:block;font-size:12px;color:#666;margin-bottom:3px;font-weight:600;}
+.fld input,.fld select,.fld textarea{width:100%;padding:7px 10px;border:1px solid #d0d7e3;border-radius:6px;font-size:13px;color:#1a1a2e;background:#fff;outline:none;transition:border .15s;}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#1a3a6b;}
+.fld textarea{height:58px;resize:vertical;}
+.row{display:flex;gap:10px;}.row .fld{flex:1;}
+
+.btn{padding:7px 15px;font-size:13px;border-radius:7px;cursor:pointer;border:1px solid #d0d7e3;background:#fff;color:#333;font-weight:500;transition:all .15s;}
+.btn:hover{background:#f0f2f5;}
+.btnp{background:#1a3a6b;color:#fff;border-color:#1a3a6b;}.btnp:hover{background:#153060;}
+.btng{background:#1a7a4a;color:#fff;border-color:#1a7a4a;}.btng:hover{background:#155e3a;}
+.btnr{background:#c0392b;color:#fff;border-color:#c0392b;}.btnr:hover{background:#a93226;}
+.btno{background:#e67e22;color:#fff;border-color:#e67e22;}.btno:hover{background:#ca6f1e;}
+.btnw{background:#8e44ad;color:#fff;border-color:#8e44ad;}.btnw:hover{background:#7d3c98;}
+.bsm{padding:4px 9px;font-size:11px;}
+
+.bdg{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;}
+.b-entry{background:#e8f4fd;color:#1a5276;}
+.b-testing{background:#fef9e7;color:#9a7d0a;}
+.b-charging{background:#fff3e0;color:#e67e22;}
+.b-replace{background:#eafaf1;color:#1a7a4a;}
+.b-direct{background:#d5f5e3;color:#1a7a4a;}
+.b-good{background:#f0f3f4;color:#566573;}
+.b-dispatched{background:#f4ecf7;color:#7d3c98;}
+.b-pending-co{background:#fde8e8;color:#c0392b;}
+.b-received{background:#d1f3e0;color:#155724;}
+.bval{background:#d1f3e0;color:#155724;}
+.bexp{background:#fde8e8;color:#842029;}
+.bfree{background:#d1f3e0;color:#155724;}
+.bpro{background:#fdebd0;color:#784212;}
+.bdealer{background:#e0ecff;color:#1a3a6b;}
+
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:7px 9px;background:#f7f9fc;border-bottom:2px solid #e8ecf3;font-weight:600;color:#555;font-size:11px;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;}
+td{padding:7px 9px;border-bottom:1px solid #f0f2f5;color:#1a1a2e;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbfd;}
+.overdue-row td{background:#fff5f5!important;}
+
+.ibox{background:#eef2fa;border-left:3px solid #1a3a6b;border-radius:0 7px 7px 0;padding:8px 12px;font-size:13px;color:#444;margin-bottom:10px;}
+.wbox{background:#fff8e1;border-left:3px solid #f0ad00;border-radius:0 7px 7px 0;padding:8px 12px;font-size:13px;color:#555;margin-bottom:10px;}
+.ebox{background:#fde8e8;border-left:3px solid #c0392b;border-radius:0 7px 7px 0;padding:8px 12px;font-size:13px;color:#555;margin-bottom:10px;}
+.sbox{background:#d1f3e0;border-left:3px solid #1a7a4a;border-radius:0 7px 7px 0;padding:8px 12px;font-size:13px;color:#155724;margin-bottom:10px;}
+.obox{background:#fff3e0;border-left:3px solid #e67e22;border-radius:0 7px 7px 0;padding:8px 12px;font-size:13px;color:#7d4000;margin-bottom:10px;}
+.pbox{background:#f4ecf7;border-left:3px solid #8e44ad;border-radius:0 7px 7px 0;padding:8px 12px;font-size:13px;color:#6c3483;margin-bottom:10px;}
+
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:13px;}
+.msg{margin-top:8px;font-size:13px;padding:8px 12px;border-radius:6px;display:none;}
+.msg.ok{background:#d1f3e0;color:#155724;display:block;}
+.msg.err{background:#fde8e8;color:#842029;display:block;}
+.sbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.sbar input{flex:1;min-width:150px;}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #ccc;border-top-color:#1a3a6b;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.lrow{text-align:center;padding:1.5rem;color:#888;font-size:13px;}
+.srow{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:13px;}
+.srow:last-child{border-bottom:none;}
+
+/* STAGE PIPELINE */
+.stages{display:flex;overflow-x:auto;gap:0;margin:1rem 0;}
+.stage{flex:1;min-width:90px;text-align:center;padding:.5rem .3rem;font-size:11px;font-weight:600;background:#f7f9fc;border:1px solid #e8ecf3;border-right:none;}
+.stage:last-child{border-right:1px solid #e8ecf3;border-radius:0 7px 7px 0;}
+.stage:first-child{border-radius:7px 0 0 7px;}
+.stage.s1{background:#e8f4fd;color:#1a5276;border-color:#aed6f1;}
+.stage.s2{background:#fef9e7;color:#9a7d0a;border-color:#f9e79f;}
+.stage.s3{background:#fff3e0;color:#e67e22;border-color:#f5cba7;}
+.stage.s4{background:#eafaf1;color:#1a7a4a;border-color:#a9dfbf;}
+.stage.s5{background:#f4ecf7;color:#7d3c98;border-color:#d7bde2;}
+.stage.s6{background:#fde8e8;color:#c0392b;border-color:#f5b8b8;}
+.stage.s7{background:#d1f3e0;color:#155724;border-color:#7ddba8;}
+.stage-n{font-size:18px;font-weight:700;display:block;margin-bottom:2px;}
+
+/* ROUTE SELECTOR */
+.route-box{display:flex;gap:10px;margin:10px 0;}
+.route-opt{flex:1;border:2px solid #d0d7e3;border-radius:8px;padding:12px;cursor:pointer;text-align:center;transition:all .15s;}
+.route-opt:hover{border-color:#1a3a6b;}
+.route-opt.selected{border-color:#1a3a6b;background:#eef2fa;}
+.route-opt.selected-green{border-color:#1a7a4a;background:#eafaf1;}
+.route-icon{font-size:22px;display:block;margin-bottom:4px;}
+.route-title{font-size:13px;font-weight:700;color:#1a1a2e;}
+.route-sub{font-size:11px;color:#888;margin-top:2px;}
+
+.prorata-calc{background:#fdebd0;border:1px solid #f0b27a;border-radius:8px;padding:1rem;margin:10px 0;}
+.prorata-calc .big{font-size:20px;font-weight:700;color:#784212;}
+
+.overdue-badge{background:#c0392b;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;margin-left:4px;}
+
+/* DOCUMENT STYLES */
+.doc-inner{background:#fff;border:1px solid #dce3f0;border-radius:8px;padding:1.5rem;font-size:13px;line-height:1.6;}
+.doc-hdr{text-align:center;border-bottom:2px solid #1a3a6b;padding-bottom:1rem;margin-bottom:1rem;}
+.doc-co{font-size:20px;font-weight:700;color:#1a3a6b;letter-spacing:1px;}
+.doc-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-top:6px;text-transform:uppercase;}
+.doc-ref{font-size:11px;color:#888;margin-top:3px;}
+.dtbl{width:100%;border-collapse:collapse;margin:.6rem 0;}
+.dtbl td{padding:5px 9px;border:1px solid #e0e5ef;font-size:12px;}
+.dtbl td:first-child{font-weight:600;color:#555;width:40%;background:#fafbfd;}
+.dtbl .sec-hdr td{background:#1a3a6b;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+.sig-row{display:flex;gap:1.5rem;margin-top:1.5rem;}
+.sig-box{flex:1;border-top:1px solid #999;padding-top:5px;font-size:11px;color:#666;text-align:center;}
+.stamp{border:2px dashed #ccc;border-radius:8px;min-height:50px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;margin-top:1rem;}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:1.5rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+.modal-title{font-size:15px;font-weight:700;color:#1a3a6b;margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid #f0f2f5;}
+
+@media(max-width:700px){
+  .g2,.g3,.g4,.g5{grid-template-columns:1fr;}
+  .row{flex-direction:column;}
+  .nb{padding:5px 9px;font-size:11px;}
+  .stages{flex-direction:column;}
+  .route-box{flex-direction:column;}
+}
+@media print{
+  #loginScreen,.hdr,.nav,.no-print,#receiveModal{display:none!important;}
+  .doc-inner{border:none;}
+  body{background:#fff;}
+  .card{box-shadow:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="lbox">
+    <div class="llogo">SF</div>
+    <div class="ltitle">SF Battery</div>
+    <div class="lsub">Warranty Management System</div>
+    <div class="fld"><label>Email</label><input type="email" id="lemail" placeholder="staff@example.com" autocomplete="username"></div>
+    <div class="fld"><label>Password</label><input type="password" id="lpass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="lbtn" onclick="doLogin()">Sign In</button>
+    <div class="lload" id="lloading"><span class="spin"></span>Signing in...</div>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- RECEIVE FROM COMPANY MODAL -->
+<div class="modal-bg" id="receiveModal">
+  <div class="modal">
+    <div class="modal-title">&#8626; Mark Received from Company</div>
+    <input type="hidden" id="rcv-cid">
+    <div id="rcv-info" class="ibox" style="margin-bottom:12px;"></div>
+    <div class="fld"><label>Company Invoice Number *</label><input type="text" id="rcv-inv-no" placeholder="e.g. INV-2024-001"></div>
+    <div class="fld"><label>Invoice Date *</label><input type="date" id="rcv-inv-date"></div>
+    <div class="fld"><label>Receipt Date (Date battery physically received) *</label><input type="date" id="rcv-receipt-date"></div>
+    <div class="fld"><label>Remarks</label><textarea id="rcv-remarks" placeholder="Any remarks on received battery condition..."></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn btng" onclick="saveReceived()">&#10003; Confirm Received</button>
+      <button class="btn" onclick="closeRcvModal()">Cancel</button>
+    </div>
+    <div class="msg" id="rcv-msg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+<div class="app">
+
+<div class="hdr no-print">
+  <div class="logo">SF</div>
+  <div>
+    <div class="hdr-title">SF Battery — Warranty Management System</div>
+    <div class="hdr-sub"><span class="sdot"></span>Live sync · Multi-device · Shri Sai Traders</div>
+  </div>
+  <div class="hdr-r">
+    <span class="ubadge" id="userLabel">—</span>
+    <span style="font-size:12px;color:#888;" id="clk"></span>
+    <button class="lout" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="nav no-print">
+  <button class="nb on"  onclick="go('dash',this)">&#9632; Dashboard</button>
+  <button class="nb"     onclick="go('entry',this)">+ New Complaint</button>
+  <button class="nb"     onclick="go('complaints',this)">&#9776; All Complaints</button>
+  <button class="nb"     onclick="go('charging',this)">&#9889; Charging</button>
+  <button class="nb"     onclick="go('testing',this)">&#9679; Testing</button>
+  <button class="nb"     onclick="go('replacement',this)">&#10227; Replacement</button>
+  <button class="nb"     onclick="go('dispatch',this)">&#9993; Dispatch</button>
+  <button class="nb"     onclick="go('returns',this)">&#8626; Returns</button>
+  <button class="nb warn" onclick="go('overdue',this)">&#9888; Overdue</button>
+  <button class="nb"     onclick="go('models',this)">&#9741; Battery Models</button>
+  <button class="nb"     onclick="go('dealers',this)">&#9734; Dealers</button>
+  <button class="nb" style="border-color:#25d366;color:#25d366;" onclick="go('waquick',this)" id="wa-nav-btn">&#128172; WA Quick Register</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="pdash" class="panel on">
+  <div class="g5" style="margin-bottom:.75rem;">
+    <div class="met"><div class="ml">Total Complaints</div><div class="mv" id="m-total" style="color:#1a3a6b;">—</div></div>
+    <div class="met"><div class="ml">Pending Testing</div><div class="mv" id="m-test" style="color:#9a7d0a;">—</div></div>
+    <div class="met"><div class="ml">For Replacement</div><div class="mv" id="m-repl" style="color:#1a7a4a;">—</div></div>
+    <div class="met"><div class="ml">At Company</div><div class="mv" id="m-comp" style="color:#7d3c98;">—</div></div>
+    <div class="met" style="border-color:#f5b8b8;"><div class="ml" style="color:#c0392b;">Overdue &gt;7 days</div><div class="mv" id="m-over" style="color:#c0392b;">—</div></div>
+  </div>
+  <div class="card">
+    <div class="stitle">Complaint Pipeline</div>
+    <div class="stages">
+      <div class="stage s1"><span class="stage-n" id="ps1">0</span>Entry Done</div>
+      <div class="stage s2"><span class="stage-n" id="ps2">0</span>Testing Pending</div>
+      <div class="stage s3"><span class="stage-n" id="ps3">0</span>Charging</div>
+      <div class="stage s4"><span class="stage-n" id="ps4">0</span>For Replacement</div>
+      <div class="stage s5"><span class="stage-n" id="ps5">0</span>Dispatched</div>
+      <div class="stage s6"><span class="stage-n" id="ps6">0</span>Pending from Co.</div>
+      <div class="stage s7"><span class="stage-n" id="ps7">0</span>Completed</div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="stitle">Recent Complaints</div>
+      <div id="dash-recent"><div class="lrow"><span class="spin"></span>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="stitle">Quick Search</div>
+      <div class="fld"><input type="text" id="qs" placeholder="Complaint No. / Serial No. / Customer..." oninput="quickS()"></div>
+      <div id="qr"></div>
+    </div>
+  </div>
+  <!-- BACKUP CARD -->
+  <div class="card" style="border:1px solid #b0c8f0;background:#f7faff;">
+    <div class="stitle" style="color:#1a3a6b;">&#128190; Data Backup — Export All to Excel</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;font-size:13px;color:#555;min-width:200px;">
+        Export a complete backup of all your data. Save this file to <strong>Google Drive</strong> or your computer regularly for safekeeping.
+        <div style="font-size:11px;color:#888;margin-top:4px;">Last export: <span id="last-export-time">Never</span></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="exportFullBackup()" style="padding:10px 20px;background:#1a3a6b;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">&#11015; Export Full Backup (Excel)</button>
+        <button onclick="exportComplaintsOnly()" style="padding:10px 16px;background:#1a7a4a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">&#11015; Complaints Only</button>
+      </div>
+    </div>
+    <div id="backup-msg" style="font-size:12px;color:#1a7a4a;margin-top:8px;display:none;"></div>
+  </div>
+</div>
+
+<!-- NEW COMPLAINT ENTRY -->
+<div id="pentry" class="panel">
+  <div class="ibox"><strong>Step 1 &amp; 2:</strong> Record battery and customer details. Complaint number is assigned automatically.</div>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="background:#1a3a6b;color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;">Complaint No.: <span id="next-id-preview">Loading...</span></div>
+      <span style="font-size:12px;color:#888;">Auto-assigned on save</span>
+    </div>
+    <div class="stitle">Battery Details</div>
+    <div class="row">
+      <div class="fld"><label>Battery Serial No. *</label><input type="text" id="e-serial" placeholder="e.g. SFB20240001"></div>
+      <div class="fld"><label>Battery Model *</label><select id="e-model" onchange="onModelChange()"><option value="">— Select Model —</option></select></div>
+      <div class="fld"><label>Battery Type</label><input type="text" id="e-type" readonly style="background:#f7f9fc;"></div>
+    </div>
+    <div class="row">
+      <div class="fld"><label>Invoice / Purchase Date (from Company) *</label><input type="date" id="e-invoice" onchange="valDates()"></div>
+      <div class="fld"><label>Date of Sale (to Customer) *</label><input type="date" id="e-sale" onchange="valDates()"></div>
+      <div class="fld"><label>Complaint Date *</label><input type="date" id="e-cdate" onchange="valDates()"></div>
+    </div>
+    <div id="date-warn" style="display:none;"></div>
+    <div id="warranty-status-box" style="display:none;" class="ibox"></div>
+  </div>
+  <div class="card">
+    <div class="stitle">Customer &amp; Dealer Details</div>
+    <div class="row">
+      <div class="fld"><label>Customer Name *</label><input type="text" id="e-cname" placeholder="Full name"></div>
+      <div class="fld"><label>Customer Phone</label><input type="text" id="e-cphone" placeholder="Mobile number"></div>
+      <div class="fld"><label>Customer Address</label><input type="text" id="e-caddr" placeholder="City / Area"></div>
+    </div>
+    <div class="row">
+      <div class="fld"><label>Dealer Name *</label><input type="text" id="e-dname" placeholder="Dealer / Shop name"></div>
+      <div class="fld"><label>Dealer Code</label><input type="text" id="e-dcode" placeholder="e.g. DLR-001"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stitle">Complaint Details</div>
+    <div class="row">
+      <div class="fld"><label>Complaint Type</label>
+        <select id="e-ctype">
+          <option value="">— Select —</option>
+          <option>Low backup / capacity loss</option>
+          <option>Battery not charging</option>
+          <option>Physical damage / leakage</option>
+          <option>Swelling / bulging</option>
+          <option>Terminal corrosion</option>
+          <option>Dead cell</option>
+          <option>Sulphation</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="fld"><label>Battery Condition on Arrival *</label>
+        <select id="e-condition">
+          <option value="">— Select —</option>
+          <option value="Charged">Charged — ready for testing</option>
+          <option value="Discharged">Discharged — needs charging first</option>
+        </select>
+      </div>
+    </div>
+    <div class="fld"><label>Remarks</label><textarea id="e-remarks" placeholder="Any observations on arrival..."></textarea></div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btnp" id="entry-save-btn" onclick="saveEntry()">&#10003; Save Complaint Entry</button>
+    <button class="btn" onclick="clrEntry()">&#10005; Clear</button>
+  </div>
+  <div class="msg" id="entry-msg"></div>
+</div>
+
+<!-- ALL COMPLAINTS -->
+<div id="pcomplaints" class="panel">
+  <div class="card">
+    <div class="stitle">All Complaints <span id="comp-count" style="font-weight:400;color:#aaa;font-size:11px;"></span>
+      <button onclick="exportComplaintsExcel()" style="margin-left:10px;padding:4px 12px;background:#1a7a4a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">&#11015; Export Excel</button>
+    </div>
+    <div class="sbar">
+      <input type="text" id="c-srch" placeholder="Search complaint no., serial, customer, dealer..." oninput="rendComplaints()" style="flex:2;min-width:180px;">
+      <select id="c-stage" onchange="rendComplaints()" style="min-width:160px;">
+        <option value="">All Stages</option>
+        <option>Entry Done</option>
+        <option>Testing Pending</option>
+        <option>Charging</option>
+        <option>For Replacement</option>
+        <option>Direct Replacement Done</option>
+        <option>Good Battery - Returned</option>
+        <option>Dispatched to Company</option>
+        <option>Pending from Company</option>
+        <option>Completed</option>
+      </select>
+      <select id="c-wp" onchange="rendComplaints()" style="min-width:130px;">
+        <option value="">All Warranty</option>
+        <option value="Free">Free Replacement</option>
+        <option value="ProRata">Pro-Rata</option>
+        <option value="Expired">Expired</option>
+      </select>
+    </div>
+    <!-- TENURE FILTER -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;background:#f7f9fc;padding:10px 12px;border-radius:8px;border:1px solid #e8ecf3;">
+      <span style="font-size:12px;font-weight:600;color:#555;">&#128197; Tenure (Complaint Date):</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:12px;color:#888;">From</label>
+        <input type="date" id="c-from" onchange="rendComplaints()" style="width:auto;padding:5px 8px;border:1px solid #d0d7e3;border-radius:6px;font-size:12px;">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:12px;color:#888;">To</label>
+        <input type="date" id="c-to" onchange="rendComplaints()" style="width:auto;padding:5px 8px;border:1px solid #d0d7e3;border-radius:6px;font-size:12px;">
+      </div>
+      <button onclick="setTenure('thisMonth')" style="padding:5px 10px;font-size:11px;border:1px solid #d0d7e3;border-radius:6px;background:#fff;cursor:pointer;">This Month</button>
+      <button onclick="setTenure('lastMonth')" style="padding:5px 10px;font-size:11px;border:1px solid #d0d7e3;border-radius:6px;background:#fff;cursor:pointer;">Last Month</button>
+      <button onclick="setTenure('thisYear')" id="btn-this-fy" style="padding:5px 10px;font-size:11px;border:1px solid #1a3a6b;border-radius:6px;background:#eef2fa;color:#1a3a6b;cursor:pointer;font-weight:600;">This FY</button>
+      <button onclick="setTenure('lastYear')" id="btn-last-fy" style="padding:5px 10px;font-size:11px;border:1px solid #d0d7e3;border-radius:6px;background:#fff;cursor:pointer;">Last FY</button>
+      <button onclick="setTenure('clear')" style="padding:5px 10px;font-size:11px;border:1px solid #c0392b;border-radius:6px;background:#fff;color:#c0392b;cursor:pointer;">Clear</button>
+      <span id="tenure-count" style="font-size:12px;color:#1a3a6b;font-weight:600;margin-left:auto;"></span>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Comp. No.</th><th>Serial No.</th><th>Model</th><th>Customer</th><th>Mobile</th><th>Dealer</th><th>Complaint Date</th><th>Sale Date</th><th>Repl. Model</th><th>Repl. Serial No.</th><th>Ticket No.</th><th>Invoice No.</th><th>Invoice Date</th><th>Warranty</th><th>Stage</th><th>Action</th></tr></thead>
+        <tbody id="comp-tbody"><tr><td colspan="16" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TESTING -->
+<div id="ptesting" class="panel">
+  <div class="ibox"><strong>Step 4:</strong> Battery must be charged before testing. Select complaint, choose report type, record result.</div>
+  <div class="g2">
+    <div class="card">
+      <div class="stitle">Record Test Result</div>
+      <div class="fld"><label>Select Complaint *</label>
+        <select id="t-sel" onchange="loadTestComp()"><option value="">— Select Complaint Ready for Testing —</option></select>
+      </div>
+      <div id="t-comp-info" style="display:none;" class="ibox"></div>
+      <div class="fld"><label>Report Type *</label>
+        <select id="t-rtype"><option value="">— Select —</option><option value="Midtronics">Midtronics Report</option><option value="Kannad">Kannad Report</option></select>
+      </div>
+      <div class="fld"><label>Test Result *</label>
+        <select id="t-result"><option value="">— Select Result —</option><option value="Replace">Replace Battery</option><option value="Good">Good Battery — Return to Customer</option></select>
+      </div>
+      <div class="fld"><label>Test Date *</label><input type="date" id="t-date"></div>
+      <div class="fld"><label>Remarks</label><textarea id="t-remarks" placeholder="Test observations..."></textarea></div>
+      <button class="btn btnp" onclick="saveTestResult()">&#10003; Save Test Result</button>
+      <div class="msg" id="test-msg"></div>
+    </div>
+    <div class="card">
+      <div class="stitle">Pending for Testing</div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>No.</th><th>Serial No.</th><th>Customer</th><th>Model</th><th>Condition</th></tr></thead>
+          <tbody id="test-pending-tbody"><tr><td colspan="5" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHARGING -->
+<div id="pcharging" class="panel">
+  <div class="obox"><strong>Step 4 (Discharged batteries):</strong> Batteries that arrived discharged must be charged before testing.</div>
+  <div class="g2">
+    <div class="card">
+      <div class="stitle">Send Battery for Charging</div>
+      <div class="fld"><label>Select Complaint *</label>
+        <select id="ch-sel" onchange="loadChargComp()"><option value="">— Select Discharged Complaint —</option></select>
+      </div>
+      <div id="ch-comp-info" style="display:none;" class="ibox"></div>
+      <div class="fld"><label>Date Sent for Charging *</label><input type="date" id="ch-date"></div>
+      <div class="fld"><label>Initial Voltage (V) *</label><input type="number" id="ch-volt" placeholder="e.g. 10.5" step="0.01"></div>
+      <div class="fld"><label>Remarks</label><textarea id="ch-remarks" placeholder="Battery condition before charging..."></textarea></div>
+      <button class="btn btno" onclick="saveCharging()">&#9889; Mark as Sent for Charging</button>
+      <div class="msg" id="ch-msg"></div>
+    </div>
+    <div class="card">
+      <div class="stitle">Mark Battery as Fully Charged</div>
+      <div class="fld"><label>Select Charging Job *</label>
+        <select id="chd-sel"><option value="">— Select Battery in Charging —</option></select>
+      </div>
+      <div class="fld"><label>Date Fully Charged *</label><input type="date" id="chd-date"></div>
+      <div class="fld"><label>Final Voltage (V) *</label><input type="number" id="chd-volt" placeholder="e.g. 12.7" step="0.01"></div>
+      <div class="fld"><label>Remarks</label><textarea id="chd-remarks" placeholder="Battery condition after charging..."></textarea></div>
+      <button class="btn btng" onclick="saveChargeDone()">&#10003; Mark as Fully Charged</button>
+      <div class="msg" id="chd-msg"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stitle">Charging Register</div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>No.</th><th>Serial No.</th><th>Customer</th><th>Model</th><th>Sent for Charging</th><th>Init. Voltage</th><th>Charged On</th><th>Final Voltage</th><th>Status</th></tr></thead>
+        <tbody id="ch-tbody"><tr><td colspan="9" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- REPLACEMENT -->
+<div id="preplacement" class="panel">
+  <div class="ibox"><strong>Step 5:</strong> For complaints where test result is "Replace Battery" — choose whether to replace directly from your stock or send to company service center.</div>
+  <div class="g2">
+    <div class="card">
+      <div class="stitle">Process Replacement</div>
+      <div class="fld"><label>Select Complaint *</label>
+        <select id="r-sel" onchange="loadReplComp()"><option value="">— Select Complaint for Replacement —</option></select>
+      </div>
+      <div id="r-comp-info" style="display:none;"></div>
+      <div id="r-warranty-info" style="display:none;"></div>
+
+      <!-- ROUTE SELECTION -->
+      <div id="r-route-section" style="display:none;">
+        <div class="fld"><label>Replacement Route *</label></div>
+        <div class="route-box">
+          <div class="route-opt" id="route-direct" onclick="selectRoute('direct')">
+            <span class="route-icon">&#127981;</span>
+            <div class="route-title">Direct Replacement</div>
+            <div class="route-sub">Replace from your own stock immediately. Customer gets battery now.</div>
+          </div>
+          <div class="route-opt" id="route-company" onclick="selectRoute('company')">
+            <span class="route-icon">&#9993;</span>
+            <div class="route-title">Send to Service Center</div>
+            <div class="route-sub">Send defective battery to company. Replacement comes from company.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIRECT REPLACEMENT FIELDS -->
+      <div id="direct-fields" style="display:none;">
+        <div class="fld"><label>New Battery Serial No. *</label><input type="text" id="r-newserial" placeholder="Replacement battery serial no."></div>
+        <div class="fld"><label>New Battery Model *</label><input type="text" id="r-newmodel" placeholder="Replacement battery model"></div>
+        <div class="fld"><label>Replacement Date *</label><input type="date" id="r-date"></div>
+        <div id="prorata-section" style="display:none;">
+          <div class="prorata-calc">
+            <div style="font-size:12px;font-weight:600;color:#784212;margin-bottom:6px;">PRO-RATA CALCULATION</div>
+            <div id="prorata-details" style="font-size:13px;color:#784212;line-height:1.6;"></div>
+            <div class="fld" style="margin-top:8px;margin-bottom:0;"><label style="color:#784212;">Amount Charged to Customer (₹) *</label><input type="number" id="r-amount" placeholder="e.g. 500" min="0"></div>
+          </div>
+        </div>
+        <div class="fld"><label>Warranty Type</label><input type="text" id="r-type-display" readonly style="background:#f7f9fc;font-weight:600;"></div>
+        <div class="fld"><label>Remarks</label><textarea id="r-remarks" placeholder="Remarks about replacement..."></textarea></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btng" onclick="saveReplacement()">&#10003; Save Direct Replacement</button>
+          <button class="btn btnp" id="r-print-btn" onclick="printReceiving()" style="display:none;">&#9113; Print Receiving Copy</button>
+        </div>
+        <div class="msg" id="repl-msg"></div>
+      </div>
+
+      <!-- COMPANY ROUTE FIELDS -->
+      <div id="company-fields" style="display:none;">
+        <div class="sbox">This battery will be sent to company service center for replacement. Go to <strong>Dispatch</strong> tab to include it in a dispatch batch.</div>
+        <div class="fld"><label>Remarks</label><textarea id="r-co-remarks" placeholder="Any remarks before dispatching..."></textarea></div>
+        <button class="btn btnw" onclick="saveCompanyRoute()">&#10003; Mark for Company Dispatch</button>
+        <div class="msg" id="repl-co-msg"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stitle">Replacement Register</div>
+      <div class="sbar">
+        <input type="text" id="repl-srch" placeholder="Search..." oninput="rendReplacements()" style="flex:1;">
+        <select id="repl-route-f" onchange="rendReplacements()" style="min-width:160px;">
+          <option value="">All Routes</option>
+          <option value="Direct">Direct Replacement</option>
+          <option value="Company">Via Company</option>
+        </select>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>No.</th><th>Old Serial</th><th>New Serial</th><th>Customer</th><th>Model</th><th>Date</th><th>Route</th><th>Type</th><th>Print</th></tr></thead>
+          <tbody id="repl-tbody"><tr><td colspan="9" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receiving copy -->
+  <div id="receiving-print" style="display:none;margin-top:.75rem;">
+    <div class="card">
+      <div class="stitle no-print">Receiving Copy — Step 6</div>
+      <div id="receiving-doc"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DISPATCH -->
+<div id="pdispatch" class="panel">
+  <div class="pbox"><strong>Steps 7 &amp; 8:</strong> Only complaints with a Ticket Number that have not been dispatched are shown. Select batteries, fill transporter &amp; challan details, generate the Delivery Challan.</div>
+
+  <!-- READY FOR DISPATCH TABLE -->
+  <div class="card">
+    <div class="stitle">Batteries Ready for Dispatch
+      <span id="dp-ready-count" style="font-weight:400;color:#aaa;font-size:11px;margin-left:6px;"></span>
+      <button onclick="exportDispatchExcel()" style="margin-left:10px;padding:4px 12px;background:#1a7a4a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">&#11015; Export Excel</button>
+    </div>
+    <div class="ibox">Only complaints with a <strong>Ticket Number</strong> that are not yet dispatched are shown. Select the batteries you want to include in this dispatch.</div>
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th><input type="checkbox" id="dp-select-all" onchange="toggleAllDp(this)" style="width:auto;"></th>
+          <th>Sl. No. (Comp. No.)</th>
+          <th>Ticket No.</th>
+          <th>Battery Model</th>
+          <th>Claim Battery Serial No.</th>
+          <th>Repl. Battery Model</th>
+          <th>Repl. Battery Serial No.</th>
+          <th>Customer</th>
+          <th>Dealer</th>
+          <th>Warranty</th>
+        </tr></thead>
+        <tbody id="dp-ready-tbody"><tr><td colspan="10" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHALLAN DETAILS -->
+  <div class="card" id="dp-form-card">
+    <div class="stitle">Delivery Challan Details</div>
+    <div class="row">
+      <div class="fld"><label>Challan Date *</label><input type="date" id="dp-date"></div>
+      <div class="fld"><label>E-Way Bill Number</label><input type="text" id="dp-eway" placeholder="e.g. 4815 7990 1505"></div>
+    </div>
+    <div class="row">
+      <div class="fld"><label>Transporter Name *</label><input type="text" id="dp-transport" placeholder="Transporter / courier name"></div>
+      <div class="fld"><label>Vehicle Number *</label><input type="text" id="dp-vehicle" placeholder="e.g. JH05AB1234"></div>
+    </div>
+    <div class="fld"><label>Remarks</label><textarea id="dp-remarks" placeholder="Any dispatch notes..."></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btnw" onclick="saveDispatch()">&#9993; Create Dispatch &amp; Print Delivery Challan</button>
+    </div>
+    <div class="msg" id="dp-msg"></div>
+  </div>
+
+  <!-- PREVIOUS DISPATCHES -->
+  <div class="card">
+    <div class="stitle">Previous Delivery Challans</div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Challan No.</th><th>Date</th><th>E-Way Bill</th><th>Transporter</th><th>Vehicle</th><th>Batteries</th><th>Print</th></tr></thead>
+        <tbody id="dp-tbody"><tr><td colspan="7" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- RETURNS -->
+<div id="preturns" class="panel">
+  <div class="ibox"><strong>Step 9:</strong> Mark batteries received back from company. Enter Invoice No., Invoice Date and Receipt Date for each battery.</div>
+  <div class="card">
+    <div class="stitle">Batteries at Company / Received</div>
+    <div class="sbar">
+      <input type="text" id="ret-srch" placeholder="Search serial no. or customer..." oninput="rendReturns()" style="flex:1;">
+      <select id="ret-filter" onchange="rendReturns()" style="min-width:160px;">
+        <option value="pending">Pending from Company</option>
+        <option value="received">Received</option>
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>No.</th><th>Serial No.</th><th>Customer</th><th>Model</th><th>Dispatched On</th><th>Ticket No.</th><th>Days at Co.</th><th>Invoice No.</th><th>Invoice Date</th><th>Receipt Date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="ret-tbody"><tr><td colspan="12" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- OVERDUE -->
+<div id="poverdue" class="panel">
+  <div class="ebox"><strong>Step 10:</strong> Batteries pending from company for more than 7 days. Follow up immediately.</div>
+  <div class="card">
+    <div class="stitle">Overdue — Pending &gt;7 Days</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+      <span id="overdue-count" style="font-size:13px;color:#c0392b;font-weight:600;"></span>
+      <button class="btn btng bsm" onclick="exportOverdue()" style="margin-left:auto;padding:7px 14px;">&#11015; Export to Excel</button>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>No.</th><th>Serial No.</th><th>Customer</th><th>Dealer</th><th>Model</th><th>Dispatched On</th><th>Ticket No.</th><th>Days Pending</th><th>Status</th></tr></thead>
+        <tbody id="overdue-tbody"><tr><td colspan="9" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- BATTERY MODELS -->
+<div id="pmodels" class="panel">
+  <div class="g2">
+    <div class="card">
+      <div class="stitle">Add Battery Model</div>
+      <div class="ibox">Free Replacement + Pro-Rata months = Total warranty. Enter MRP for automatic pro-rata calculation.</div>
+      <div class="row">
+        <div class="fld"><label>Model Name *</label><input type="text" id="mod-name" placeholder="e.g. SF DIN65L"></div>
+        <div class="fld"><label>Battery Type *</label>
+          <select id="mod-type"><option value="">— Select —</option><option>Automotive (Car/Truck)</option><option>Two-Wheeler</option><option>Inverter/UPS</option><option>Tractor</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="fld"><label>Free Replacement (months) *</label><input type="number" id="mod-free" placeholder="e.g. 12" min="0" max="60" oninput="updTotal()"></div>
+        <div class="fld"><label>Pro-Rata (months)</label><input type="number" id="mod-pro" placeholder="e.g. 12" min="0" max="60" oninput="updTotal()"></div>
+        <div class="fld"><label>Total Warranty</label><input type="text" id="mod-total" readonly style="background:#f7f9fc;font-weight:600;"></div>
+      </div>
+      <div class="fld"><label>MRP / List Price (₹) — needed for pro-rata calculation</label><input type="number" id="mod-price" placeholder="Battery MRP"></div>
+      <button class="btn btnp" onclick="saveModel()" style="width:100%;margin-top:4px;">Add Model</button>
+      <div class="msg" id="mod-msg"></div>
+    </div>
+    <div class="card">
+      <div class="stitle">Battery Models Master</div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Model</th><th>Type</th><th>Free Repl.</th><th>Pro-Rata</th><th>Total</th><th>MRP (₹)</th></tr></thead>
+          <tbody id="mod-tbody"><tr><td colspan="6" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEALERS -->
+<div id="pdealers" class="panel">
+  <div class="g2">
+    <div class="card">
+      <div class="stitle">Add Dealer</div>
+      <div class="row">
+        <div class="fld"><label>Dealer Name *</label><input type="text" id="dl-name" placeholder="Shop / Firm name"></div>
+        <div class="fld"><label>Code</label><input type="text" id="dl-code" placeholder="e.g. DLR-001"></div>
+      </div>
+      <div class="row">
+        <div class="fld"><label>Phone</label><input type="text" id="dl-phone" placeholder="Mobile"></div>
+        <div class="fld"><label>Address</label><input type="text" id="dl-addr" placeholder="City / Area"></div>
+      </div>
+      <button class="btn btnp" onclick="saveDealer()" style="width:100%;margin-top:4px;">Add Dealer</button>
+      <div class="msg" id="dl-msg"></div>
+    </div>
+    <div class="card">
+      <div class="stitle">Dealer Register</div>
+      <input type="text" id="dl-srch" placeholder="Search dealers..." oninput="rendDealers()" style="width:100%;padding:7px 10px;border:1px solid #d0d7e3;border-radius:6px;margin-bottom:10px;">
+      <div class="tw">
+        <table>
+          <thead><tr><th>Name</th><th>Code</th><th>Phone</th><th>Address</th></tr></thead>
+          <tbody id="dl-tbody"><tr><td colspan="4" class="lrow"><span class="spin"></span>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WA QUICK REGISTER -->
+<div id="pwaquick" class="panel">
+  <div style="background:#25d366;color:#fff;border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;display:flex;align-items:center;gap:12px;">
+    <div style="width:40px;height:40px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">&#128172;</div>
+    <div><div style="font-size:15px;font-weight:700;">WhatsApp Quick Register Assistant</div><div style="font-size:12px;opacity:.85;">Select a complaint → Open SF Batteries WhatsApp → Follow the steps side by side</div></div>
+  </div>
+  <div class="card">
+    <div class="stitle">Select Complaint to Register</div>
+    <div class="row">
+      <div class="fld" style="flex:2;"><label>Select Complaint</label><select id="wa-sel" onchange="loadWAComp()"><option value="">— Select Complaint —</option></select></div>
+      <div class="fld" style="flex:0;display:flex;align-items:flex-end;"><button onclick="openWA()" style="padding:8px 18px;background:#25d366;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128172; Open SF Batteries WhatsApp</button></div>
+    </div>
+    <div id="wa-comp-preview" style="display:none;" class="ibox"></div>
+  </div>
+  <div class="g2" id="wa-assistant" style="display:none;">
+    <div class="card">
+      <div class="stitle">&#128203; Your Answers — Copy &amp; Paste into WhatsApp</div>
+      <div style="font-size:12px;color:#888;margin-bottom:10px;">Click <strong>Copy</strong> next to each answer and paste it into WhatsApp.</div>
+      <div id="wa-answers"></div>
+    </div>
+    <div class="card">
+      <div class="stitle">&#9654; Step-by-Step Bot Guide</div>
+      <div style="background:#f0f2f5;border-radius:99px;height:6px;margin-bottom:12px;overflow:hidden;"><div id="wa-progress" style="height:100%;background:#25d366;border-radius:99px;width:0%;transition:width .4s;"></div></div>
+      <div id="wa-steps"></div>
+      <div id="wa-ticket-box" style="display:none;background:#eafaf1;border:2px solid #1a7a4a;border-radius:8px;padding:1rem;margin-top:8px;">
+        <div style="font-size:13px;font-weight:600;color:#155724;margin-bottom:8px;">&#127881; Bot sent the Ticket Number! Enter it here:</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="wa-ticket-input" placeholder="e.g. 03180041" style="flex:1;padding:8px 12px;border:2px solid #1a7a4a;border-radius:6px;font-size:15px;font-weight:700;color:#1a3a6b;outline:none;">
+          <button onclick="saveWATicket()" style="padding:8px 16px;background:#1a7a4a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">&#10003; Save</button>
+        </div>
+        <div id="wa-ticket-msg" style="font-size:12px;margin-top:6px;color:#155724;display:none;"></div>
+      </div>
+      <div id="wa-success" style="display:none;background:#d1f3e0;border:2px solid #1a7a4a;border-radius:10px;padding:1.5rem;text-align:center;margin-top:8px;">
+        <div style="font-size:32px;margin-bottom:6px;">&#127881;</div>
+        <div style="font-size:16px;font-weight:700;color:#155724;">Ticket Registered Successfully!</div>
+        <div id="wa-success-ticket" style="font-size:26px;font-weight:700;color:#1a3a6b;margin:6px 0;letter-spacing:2px;"></div>
+        <div style="font-size:12px;color:#555;">Saved to complaint record in Firebase.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<script>
+// ══════════════════════════════════════════
+//  🔧 FIREBASE CONFIG — REPLACE THIS BLOCK
+// ══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyC_xGcG78vrj7eZnOGe1eI3rt8qhXjT_lk",
+  authDomain: "shri-sai-traders-5400f.firebaseapp.com",
+  projectId: "shri-sai-traders-5400f",
+  storageBucket: "shri-sai-traders-5400f.firebasestorage.app",
+  messagingSenderId: "79817663508",
+  appId: "1:79817663508:web:bc7d6107f1041a87b47301",
+  measurementId: "G-1LJJ8KX9V9"
+};
+// ══════════════════════════════════════════
+
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+const TS=firebase.firestore.FieldValue.serverTimestamp;
+
+var complaints=[],models=[],dealers=[],dispatches=[];
+var unsubs=[];
+var currentRoute='';
+
+// ── AUTH ──
+function doLogin(){
+  var e=v('lemail'),p=v('lpass'),err=el('lerr'),ld=el('lloading');
+  if(!e||!p){err.style.display='block';err.textContent='Please enter email and password.';return;}
+  err.style.display='none';ld.style.display='block';
+  try{
+    auth.signInWithEmailAndPassword(e,p)
+      .then(function(){ld.style.display='none';})
+      .catch(function(ex){
+        ld.style.display='none';err.style.display='block';
+        err.textContent='Login error: '+ex.message+' ('+ex.code+')';
+      });
+  }catch(ex){
+    ld.style.display='none';err.style.display='block';
+    err.textContent='Firebase error: '+ex.message;
+  }
+}
+function doLogout(){unsubs.forEach(function(u){u();});auth.signOut();}
+auth.onAuthStateChanged(function(user){
+  if(user){
+    el('loginScreen').style.display='none';el('appScreen').style.display='block';
+    el('userLabel').textContent=user.email;
+    startListeners();updClock();loadNextId();
+  } else {
+    el('loginScreen').style.display='flex';el('appScreen').style.display='none';
+    complaints=[];models=[];dealers=[];dispatches=[];
+  }
+});
+
+function startListeners(){
+  unsubs.forEach(function(u){u();});unsubs=[];
+  unsubs.push(db.collection('complaints').orderBy('complaintNum','asc').onSnapshot(function(s){
+    complaints=s.docs.map(function(d){return A(d);});
+    updDash();rendComplaints();rendTestPending();rendChargingJobs();rendReplacements();rendReturns();rendOverdue();loadAllSelects();
+  }));
+  unsubs.push(db.collection('batteryModels').orderBy('name','asc').onSnapshot(function(s){
+    models=s.docs.map(function(d){return A(d);});rendModels();popModelSel();
+  }));
+  unsubs.push(db.collection('dealers').orderBy('name','asc').onSnapshot(function(s){
+    dealers=s.docs.map(function(d){return A(d);});rendDealers();
+  }));
+  unsubs.push(db.collection('dispatches').orderBy('createdAt','desc').onSnapshot(function(s){
+    dispatches=s.docs.map(function(d){return A(d);});rendDispatches();rendReturns();rendOverdue();loadDpBatteries();
+  }));
+}
+
+// ── HELPERS ──
+function el(id){return document.getElementById(id);}
+function v(id){var e=el(id);return e?e.value.trim():'';}
+function A(d){return Object.assign({id:d.id},d.data());}
+function pad4(n){return String(n).padStart(4,'0');}
+function pad2(n){return String(n).padStart(2,'0');}
+function fd(d){if(!d)return'—';if(d&&d.toDate)d=d.toDate().toISOString().split('T')[0];if(typeof d!=='string')return'—';var dt=new Date(d+'T00:00:00');return pad2(dt.getDate())+'/'+pad2(dt.getMonth()+1)+'/'+dt.getFullYear();}
+function tod(){return new Date().toISOString().split('T')[0];}
+function addM(ds,m){var d=new Date(ds+'T00:00:00');d.setMonth(d.getMonth()+m);return d;}
+function daysDiff(d1,d2){if(!d1||!d2)return 0;return Math.floor((new Date(d2+'T00:00:00')-new Date(d1+'T00:00:00'))/(1000*60*60*24));}
+function setMsg(id,txt,type){var e=el(id);if(!e)return;e.textContent=txt;e.className='msg '+type;}
+function updClock(){el('clk').textContent=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function r2(k,val){return'<tr><td>'+k+'</td><td>'+val+'</td></tr>';}
+function secHdr(t){return'<tr class="sec-hdr"><td colspan="2">'+t+'</td></tr>';}
+
+function go(id,btn){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  el('p'+id).classList.add('on');btn.classList.add('on');
+  if(id==='dash')updDash();
+  if(id==='testing'){loadTestSel();rendTestPending();}
+  if(id==='charging'){loadChargSel();loadChargDoneSel();}
+  if(id==='replacement'){loadReplSel();rendReplacements();}
+  if(id==='dispatch'){loadDpBatteries();rendDispatches();}
+  if(id==='returns')rendReturns();
+  if(id==='overdue')rendOverdue();
+}
+
+// ── AUTO COMPLAINT ID ──
+function loadNextId(){
+  db.collection('meta').doc('counter').get().then(function(doc){
+    var next=doc.exists?(doc.data().complaintCount||0)+1:1;
+    el('next-id-preview').textContent=pad4(next);
+  }).catch(function(){el('next-id-preview').textContent='0001';});
+}
+
+function getNextId(){
+  return db.runTransaction(function(tx){
+    var ref=db.collection('meta').doc('counter');
+    return tx.get(ref).then(function(doc){
+      var next=doc.exists?(doc.data().complaintCount||0)+1:1;
+      tx.set(ref,{complaintCount:next},{merge:true});
+      return next;
+    });
+  });
+}
+
+// ── WARRANTY CALCULATOR ──
+function getWarrantyPeriod(comp){
+  var m=models.find(function(x){return x.name===comp.batteryModel;});
+  if(!m)return{type:'Unknown',freeMonths:0,proMonths:0,totalMonths:0};
+  var freeM=parseInt(m.freeMonths)||0,proM=parseInt(m.proMonths)||0,totalM=freeM+proM;
+  var sd=comp.saleDate;if(!sd)return{type:'Unknown',freeMonths:freeM,proMonths:proM,totalMonths:totalM};
+  var freeExp=addM(sd,freeM),totalExp=addM(sd,totalM);
+  var cd=comp.complaintDate?new Date(comp.complaintDate+'T00:00:00'):new Date();
+  var freeExpStr=freeExp.toISOString().split('T')[0],totalExpStr=totalExp.toISOString().split('T')[0];
+  if(cd<=freeExp)return{type:'Free',freeMonths:freeM,proMonths:proM,totalMonths:totalM,freeExpiry:freeExpStr,totalExpiry:totalExpStr,model:m};
+  if(cd<=totalExp)return{type:'ProRata',freeMonths:freeM,proMonths:proM,totalMonths:totalM,freeExpiry:freeExpStr,totalExpiry:totalExpStr,model:m};
+  return{type:'Expired',freeMonths:freeM,proMonths:proM,totalMonths:totalM,freeExpiry:freeExpStr,totalExpiry:totalExpStr,model:m};
+}
+
+function calcProRata(comp,wp){
+  if(!wp.model||!wp.model.mrp)return null;
+  var mrp=parseFloat(wp.model.mrp);
+  var sd=comp.saleDate,cd=comp.complaintDate||tod();
+  var usedDays=daysDiff(sd,cd),totalDays=daysDiff(sd,addM(sd,wp.totalMonths).toISOString().split('T')[0]);
+  if(totalDays<=0)return null;
+  var ratio=usedDays/totalDays,charged=Math.round(mrp*ratio);
+  return{mrp:mrp,usedDays:usedDays,totalDays:totalDays,usedPct:Math.round(ratio*100),charged:charged};
+}
+
+function wBdg(wp){
+  if(wp==='Free')return'<span class="bdg bfree">Free Replacement</span>';
+  if(wp==='ProRata')return'<span class="bdg bpro">Pro-Rata</span>';
+  return'<span class="bdg bexp">Expired</span>';
+}
+
+// ── VALIDATE DATES ──
+function valDates(){
+  var inv=v('e-invoice'),sal=v('e-sale'),w=el('date-warn'),wb=el('warranty-status-box');
+  if(!inv||!sal){w.style.display='none';wb.style.display='none';return true;}
+  var diff=(new Date(sal+'T00:00:00')-new Date(inv+'T00:00:00'))/(1000*60*60*24*30.44);
+  if(diff<0){w.style.display='block';w.className='ebox';w.innerHTML='<strong>Error:</strong> Date of Sale cannot be before Invoice/Purchase Date.';wb.style.display='none';return false;}
+  if(diff>6){w.style.display='block';w.className='wbox';w.innerHTML='<strong>Warning:</strong> Date of Sale is <strong>'+diff.toFixed(1)+' months</strong> after Invoice Date. Exceeds 6-month limit — warranty may not apply.';wb.style.display='none';return false;}
+  w.style.display='block';w.className='sbox';w.innerHTML='<strong>OK:</strong> Date of Sale is '+diff.toFixed(1)+' month(s) after Invoice Date — within the 6-month window.';
+  var modName=v('e-model'),sal2=sal;
+  if(modName&&sal2){
+    var fakeComp={batteryModel:modName,saleDate:sal2,complaintDate:v('e-cdate')||tod()};
+    var wp=getWarrantyPeriod(fakeComp);
+    if(wp.type!=='Unknown'){
+      wb.style.display='block';wb.className='ibox';
+      wb.innerHTML='<strong>Warranty Status:</strong> '+wBdg(wp.type)+' &nbsp;|&nbsp; Free replacement until: '+fd(wp.freeExpiry)+' &nbsp;|&nbsp; Total warranty until: '+fd(wp.totalExpiry);
+    }
+  }
+  return true;
+}
+
+function onModelChange(){
+  var modName=v('e-model'),m=models.find(function(x){return x.name===modName;});
+  el('e-type').value=m?m.battType:'';
+  valDates();
+}
+
+function updTotal(){
+  var f=parseInt(el('mod-free').value)||0,p=parseInt(el('mod-pro').value)||0;
+  el('mod-total').value=(f+p)+' months total';
+}
+
+// ── SAVE ENTRY ──
+function saveEntry(){
+  var serial=v('e-serial'),model=v('e-model'),inv=v('e-invoice'),sal=v('e-sale'),cd=v('e-cdate'),cn=v('e-cname'),dn=v('e-dname'),cond=v('e-condition');
+  if(!serial||!model||!inv||!sal||!cd||!cn||!dn||!cond){setMsg('entry-msg','Please fill all required (*) fields.','err');return;}
+  if(!valDates()){setMsg('entry-msg','Please fix the date issue before saving.','err');return;}
+  var diff=(new Date(sal+'T00:00:00')-new Date(inv+'T00:00:00'))/(1000*60*60*24*30.44);
+  var wp=getWarrantyPeriod({batteryModel:model,saleDate:sal,complaintDate:cd});
+  var stage=cond==='Discharged'?'Charging':'Testing Pending';
+  var btn=el('entry-save-btn');btn.textContent='Saving...';btn.disabled=true;
+  getNextId().then(function(num){
+    var data={complaintNum:num,complaintId:pad4(num),serial:serial,batteryModel:model,batteryType:v('e-type'),
+      invoiceDate:inv,saleDate:sal,complaintDate:cd,custName:cn,custPhone:v('e-cphone'),custAddr:v('e-caddr'),
+      dealerName:dn,dealerCode:v('e-dcode'),complaintType:v('e-ctype'),condition:cond,remarks:v('e-remarks'),
+      saleWithin6Months:diff>=0&&diff<=6,warrantyType:wp.type,stage:stage,
+      createdAt:TS(),createdBy:auth.currentUser?auth.currentUser.email:''};
+    return db.collection('complaints').add(data);
+  }).then(function(ref){
+    setMsg('entry-msg','Saved! Complaint No.: '+el('next-id-preview').textContent+' | Stage: '+stage+' | Warranty: '+wp.type,'ok');
+    clrEntry();btn.textContent='✓ Save Complaint Entry';btn.disabled=false;
+    loadNextId();
+  }).catch(function(e){setMsg('entry-msg','Error: '+e.message,'err');btn.textContent='✓ Save Complaint Entry';btn.disabled=false;});
+}
+
+function clrEntry(){
+  ['e-serial','e-model','e-invoice','e-sale','e-cdate','e-cname','e-cphone','e-caddr','e-dname','e-dcode','e-ctype','e-condition','e-remarks'].forEach(function(id){
+    var e=el(id);if(e){if(e.tagName==='SELECT')e.selectedIndex=0;else e.value='';}
+  });
+  el('e-type').value='';el('date-warn').style.display='none';el('warranty-status-box').style.display='none';
+}
+
+// ── STAGE BADGE ──
+function stageBdg(s){
+  var m={'Entry Done':'b-entry','Testing Pending':'b-testing','Charging':'b-charging',
+    'For Replacement':'b-replace','Direct Replacement Done':'b-direct','Good Battery - Returned':'b-good',
+    'Dispatched to Company':'b-dispatched','Pending from Company':'b-pending-co','Completed':'b-received'};
+  return'<span class="bdg '+(m[s]||'b-entry')+'">'+s+'</span>';
+}
+
+// ── DASHBOARD ──
+function updDash(){
+  el('m-total').textContent=complaints.length;
+  el('m-test').textContent=complaints.filter(function(c){return c.stage==='Testing Pending';}).length;
+  el('m-repl').textContent=complaints.filter(function(c){return c.stage==='For Replacement';}).length;
+  el('m-comp').textContent=complaints.filter(function(c){return c.stage==='Dispatched to Company'||c.stage==='Pending from Company';}).length;
+  el('m-over').textContent=getOverdueBatteries().length;
+  ['Entry Done','Testing Pending','Charging','For Replacement','Dispatched to Company','Pending from Company','Completed'].forEach(function(s,i){
+    el('ps'+(i+1)).textContent=complaints.filter(function(c){return c.stage===s;}).length;
+  });
+  var rec=complaints.slice(-6).reverse(),re=el('dash-recent');
+  re.innerHTML=!rec.length?'<div class="empty">No complaints yet</div>':
+    '<table><thead><tr><th>No.</th><th>Serial No.</th><th>Customer</th><th>Model</th><th>Stage</th></tr></thead><tbody>'+
+    rec.map(function(c){return'<tr><td style="font-weight:700;color:#1a3a6b;">'+c.complaintId+'</td><td style="font-weight:600;">'+c.serial+'</td><td>'+c.custName+'</td><td style="font-size:12px;">'+c.batteryModel+'</td><td>'+stageBdg(c.stage)+'</td></tr>';}).join('')+'</tbody></table>';
+}
+
+function quickS(){
+  var q=v('qs').toLowerCase(),er=el('qr');
+  if(!q){er.innerHTML='';return;}
+  var found=complaints.filter(function(c){return(c.complaintId+c.serial+c.custName+'').toLowerCase().includes(q);}).slice(0,6);
+  er.innerHTML=!found.length?'<div style="font-size:13px;color:#aaa;padding:8px 0;">No records found.</div>':
+    '<div style="margin-top:8px;">'+found.map(function(c){return'<div class="srow"><span style="font-size:13px;font-weight:700;color:#1a3a6b;width:55px;">'+c.complaintId+'</span><span style="font-weight:600;width:120px;font-size:12px;">'+c.serial+'</span><span style="flex:1;font-size:13px;">'+c.custName+'</span>'+stageBdg(c.stage)+'</div>';}).join('')+'</div>';
+}
+
+// ── ALL COMPLAINTS ──
+function setTenure(mode){
+  var now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  var fi=el('c-from'),ti=el('c-to');
+  if(!fi||!ti)return;
+  // Financial Year: April (month 3) to March (month 2 next year)
+  // If current month is Jan-Mar (0-2), FY started previous April
+  // If current month is Apr-Dec (3-11), FY started this April
+  var fyStart=m>=3?y:y-1; // April of FY start year
+  var fyEnd=fyStart+1;     // March of FY end year
+  var prevFyStart=fyStart-1;
+  var prevFyEnd=fyStart;
+  if(mode==='thisMonth'){
+    fi.value=y+'-'+pad2(m+1)+'-01';
+    ti.value=y+'-'+pad2(m+1)+'-'+pad2(new Date(y,m+1,0).getDate());
+  } else if(mode==='lastMonth'){
+    var lm=m===0?11:m-1,ly=m===0?y-1:y;
+    fi.value=ly+'-'+pad2(lm+1)+'-01';
+    ti.value=ly+'-'+pad2(lm+1)+'-'+pad2(new Date(ly,lm+1,0).getDate());
+  } else if(mode==='thisYear'){
+    // Current FY: e.g. if today is Apr 2026, FY = Apr 2026 – Mar 2027
+    fi.value=fyStart+'-04-01';
+    ti.value=fyEnd+'-03-31';
+  } else if(mode==='lastYear'){
+    // Previous FY: e.g. Apr 2025 – Mar 2026
+    fi.value=prevFyStart+'-04-01';
+    ti.value=prevFyEnd+'-03-31';
+  } else{
+    fi.value='';ti.value='';
+  }
+  rendComplaints();
+}
+
+function rendComplaints(){
+  var srch=v('c-srch').toLowerCase(),sf=v('c-stage'),wp=v('c-wp');
+  var fromD=v('c-from'),toD=v('c-to');
+  var list=complaints.filter(function(c){
+    var s=(c.complaintId+c.serial+c.custName+c.dealerName+c.batteryModel+' '+(c.newSerial||'')+(c.newModel||'')+(c.ticketNo||'')+' '+(c.companyInvoiceNo||'')+'').toLowerCase();
+    var matchFrom=!fromD||!c.complaintDate||c.complaintDate>=fromD;
+    var matchTo=!toD||!c.complaintDate||c.complaintDate<=toD;
+    return(!srch||s.includes(srch))&&(!sf||c.stage===sf)&&(!wp||c.warrantyType===wp)&&matchFrom&&matchTo;
+  });
+  el('comp-count').textContent='— '+list.length+' record'+(list.length===1?'':'s');
+  var tc=el('tenure-count');if(tc)tc.textContent=(fromD||toD)?list.length+' complaints in selected period':'';
+  var tb=el('comp-tbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="14" class="empty">No records found.</td></tr>';return;}
+  tb.innerHTML=list.map(function(c){
+    var wpInfo=getWarrantyPeriod(c);
+    var isGood=c.stage==='Good Battery - Returned';
+    var replModel=isGood?'<span style="color:#566573;font-style:italic;">Good Battery</span>':(c.newModel||'—');
+    var replSerial=isGood?'<span style="color:#566573;font-style:italic;">Good Battery</span>':(c.newSerial||'—');
+    var ticketDisp=c.ticketNo?'<span style="font-weight:600;color:#1a3a6b;">'+c.ticketNo+'</span>':'<span style="color:#aaa;">—</span>';
+    return'<tr>'+
+      '<td style="font-weight:700;color:#1a3a6b;font-size:14px;">'+c.complaintId+'</td>'+
+      '<td style="font-weight:600;">'+c.serial+'</td>'+
+      '<td style="font-size:12px;">'+c.batteryModel+'</td>'+
+      '<td>'+c.custName+'</td>'+
+      '<td style="font-size:12px;">'+(c.custPhone||'—')+'</td>'+
+      '<td>'+c.dealerName+'</td>'+
+      '<td>'+fd(c.complaintDate)+'</td>'+
+      '<td>'+fd(c.saleDate)+'</td>'+
+      '<td style="font-size:12px;">'+replModel+'</td>'+
+      '<td style="font-size:12px;">'+replSerial+'</td>'+
+      '<td>'+ticketDisp+'</td>'+
+      '<td style="font-size:12px;">'+(c.companyInvoiceNo?'<span style="font-weight:600;color:#1a3a6b;">'+c.companyInvoiceNo+'</span>':'<span style="color:#aaa;">—</span>')+'</td>'+
+      '<td style="font-size:12px;">'+fd(c.companyInvoiceDate)+'</td>'+
+      '<td>'+wBdg(wpInfo.type)+'</td>'+
+      '<td>'+stageBdg(c.stage)+'</td>'+
+      '<td><button class="btn bsm btnp" onclick="viewComp(\''+c.id+'\')">View</button></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function exportComplaintsExcel(){
+  var srch=v('c-srch').toLowerCase(),sf=v('c-stage'),wp=v('c-wp');
+  var fromD=v('c-from'),toD=v('c-to');
+  var list=complaints.filter(function(c){
+    var s=(c.complaintId+c.serial+c.custName+c.dealerName+c.batteryModel+' '+(c.newSerial||'')+(c.newModel||'')+(c.ticketNo||'')+'').toLowerCase();
+  var rows=[['Complaint No.','Ticket No.','Customer Name','Mobile Number','Dealer Name','Complaint Battery Model','Complaint Battery Serial No.','Date of Sale','Replacement Battery Model','Replacement Battery Serial No.','Company Invoice No.','Invoice Date']];
+  list.forEach(function(c){
+    var isGood=c.stage==='Good Battery - Returned';
+    rows.push([c.complaintId||'',c.ticketNo||'',c.custName||'',c.custPhone||'',c.dealerName||'',
+      c.batteryModel||'',c.serial||'',c.saleDate||'',
+      isGood?'Good Battery':(c.newModel||''),
+      isGood?'Good Battery':(c.newSerial||''),
+      c.companyInvoiceNo||'',
+      c.companyInvoiceDate||''
+    ]);
+  });
+  csvDownload(rows,'SF_Battery_Complaints_'+tod()+'.csv');
+}
+
+function csvDownload(rows,filename){
+  var csv=rows.map(function(r){return r.map(function(x){return'"'+String(x).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+}
+
+function viewComp(id){
+  var c=complaints.find(function(x){return x.id===id;});if(!c)return;
+  var wp=getWarrantyPeriod(c);
+  var info='Complaint No.: '+c.complaintId+'\nSerial No.: '+c.serial+'\nModel: '+c.batteryModel+'\nCustomer: '+c.custName+(c.custPhone?' ('+c.custPhone+')':'')+'\nDealer: '+c.dealerName+'\nInvoice Date: '+fd(c.invoiceDate)+'\nSale Date: '+fd(c.saleDate)+'\nComplaint Date: '+fd(c.complaintDate)+'\nWarranty: '+wp.type+(wp.totalExpiry?'\nExpiry: '+fd(wp.totalExpiry):'')+'\nStage: '+c.stage+(c.testResult?'\nTest Result: '+c.testResult:'')+( c.replacementType?'\nReplacement: '+c.replacementType:'');
+  alert(info);
+}
+
+// ── POPULATE SELECTS ──
+function popModelSel(){
+  var sel=el('e-model'),cur=sel.value;
+  sel.innerHTML='<option value="">— Select Model —</option>'+models.map(function(m){return'<option value="'+m.name+'"'+(m.name===cur?' selected':'')+'>'+m.name+' ('+m.battType+')</option>';}).join('');
+}
+
+function loadAllSelects(){loadTestSel();loadChargSel();loadChargDoneSel();loadReplSel();loadDpBatteries();}
+
+function loadTestSel(){
+  var sel=el('t-sel');if(!sel)return;var cur=sel.value;
+  var list=complaints.filter(function(c){return c.stage==='Testing Pending';});
+  sel.innerHTML='<option value="">— Select Complaint Ready for Testing —</option>'+list.map(function(c){return'<option value="'+c.id+'"'+(c.id===cur?' selected':'')+'>'+c.complaintId+' · '+c.serial+' · '+c.custName+'</option>';}).join('');
+}
+
+function loadChargSel(){
+  var sel=el('ch-sel');if(!sel)return;
+  var list=complaints.filter(function(c){return c.stage==='Charging'&&!c.chargingStartDate;});
+  sel.innerHTML='<option value="">— Select Discharged Complaint —</option>'+list.map(function(c){return'<option value="'+c.id+'">'+c.complaintId+' · '+c.serial+' · '+c.custName+'</option>';}).join('');
+}
+
+function loadChargDoneSel(){
+  var sel=el('chd-sel');if(!sel)return;
+  var list=complaints.filter(function(c){return c.stage==='Charging'&&c.chargingStartDate;});
+  sel.innerHTML='<option value="">— Select Battery in Charging —</option>'+list.map(function(c){return'<option value="'+c.id+'">'+c.complaintId+' · '+c.serial+' · '+c.custName+'</option>';}).join('');
+}
+
+function loadReplSel(){
+  var sel=el('r-sel');if(!sel)return;var cur=sel.value;
+  var list=complaints.filter(function(c){return c.stage==='For Replacement';});
+  sel.innerHTML='<option value="">— Select Complaint for Replacement —</option>'+list.map(function(c){return'<option value="'+c.id+'"'+(c.id===cur?' selected':'')+'>'+c.complaintId+' · '+c.serial+' · '+c.custName+' ('+c.warrantyType+')</option>';}).join('');
+}
+
+function loadDpBatteries(){
+  rendDpReady();
+}
+
+function toggleAllDp(cb){
+  document.querySelectorAll('.dp-chk').forEach(function(c){c.checked=cb.checked;});
+}
+
+function rendDpReady(){
+  // Show complaints with ticket no. that haven't been dispatched
+  var list=complaints.filter(function(c){return c.ticketNo&&!c.dispatchBatchId;});
+  var cnt=el('dp-ready-count');if(cnt)cnt.textContent='— '+list.length+' ready';
+  var tb=el('dp-ready-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="8" class="empty">No batteries ready for dispatch. Batteries need a Ticket No. (from WA Quick Register) before they can be dispatched.</td></tr>';return;}
+  tb.innerHTML=list.map(function(c){return'<tr>'+
+    '<td><input type="checkbox" class="dp-chk" value="'+c.id+'" style="width:auto;"></td>'+
+    '<td style="font-weight:700;color:#1a3a6b;">'+c.complaintId+'</td>'+
+    '<td style="font-weight:600;">'+c.serial+'</td>'+
+    '<td style="font-size:12px;">'+c.batteryModel+'</td>'+
+    '<td>'+c.custName+'</td>'+
+    '<td>'+c.dealerName+'</td>'+
+    '<td style="font-weight:600;color:#1a3a6b;">'+c.ticketNo+'</td>'+
+    '<td>'+(c.warrantyType?'<span class="bdg '+(c.warrantyType==='Free'?'bfree':'bpro')+'">'+c.warrantyType+'</span>':'—')+'</td>'+
+  '</tr>';}).join('');
+}
+
+function exportDispatchExcel(){
+  var list=complaints.filter(function(c){return c.ticketNo&&!c.dispatchBatchId;});
+  if(!list.length){alert('No batteries ready for dispatch export.');return;}
+  var rows=[['Serial No.','Complaint No.','Complaint Battery Model']];
+  list.forEach(function(c){rows.push([c.serial||'',c.complaintId||'',c.batteryModel||'']);});
+  csvDownload(rows,'SF_Battery_Dispatch_'+tod()+'.csv');
+}
+
+// ── TESTING ──
+function loadTestComp(){
+  var id=v('t-sel'),info=el('t-comp-info');
+  if(!id){info.style.display='none';return;}
+  var c=complaints.find(function(x){return x.id===id;});if(!c)return;
+  var wp=getWarrantyPeriod(c);
+  info.style.display='block';
+  info.innerHTML='<strong>No. '+c.complaintId+' · '+c.serial+'</strong> · '+c.batteryModel+' · '+c.custName+' · Sale: '+fd(c.saleDate)+' · '+wBdg(wp.type);
+}
+
+function saveTestResult(){
+  var id=v('t-sel'),rtype=v('t-rtype'),result=v('t-result'),tdate=v('t-date');
+  if(!id||!rtype||!result||!tdate){setMsg('test-msg','Please fill all fields.','err');return;}
+  var newStage=result==='Replace'?'For Replacement':'Good Battery - Returned';
+  db.collection('complaints').doc(id).update({stage:newStage,testReportType:rtype,testResult:result,testDate:tdate,testRemarks:v('t-remarks'),updatedAt:TS()})
+    .then(function(){setMsg('test-msg','Test result saved. Stage: '+newStage,'ok');el('t-sel').selectedIndex=0;el('t-comp-info').style.display='none';['t-rtype','t-result','t-date','t-remarks'].forEach(function(x){var e=el(x);if(e){if(e.tagName==='SELECT')e.selectedIndex=0;else e.value='';}});})
+    .catch(function(e){setMsg('test-msg','Error: '+e.message,'err');});
+}
+
+function rendTestPending(){
+  var list=complaints.filter(function(c){return c.stage==='Testing Pending';});
+  var tb=el('test-pending-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="5" class="empty">No batteries pending testing.</td></tr>';return;}
+  tb.innerHTML=list.map(function(c){return'<tr><td style="font-weight:700;color:#1a3a6b;">'+c.complaintId+'</td><td style="font-weight:600;">'+c.serial+'</td><td>'+c.custName+'</td><td style="font-size:12px;">'+c.batteryModel+'</td><td><span class="bdg b-testing">'+c.condition+'</span></td></tr>';}).join('');
+}
+
+// ── CHARGING ──
+function loadChargComp(){
+  var id=v('ch-sel'),info=el('ch-comp-info');
+  if(!id){info.style.display='none';return;}
+  var c=complaints.find(function(x){return x.id===id;});if(!c)return;
+  info.style.display='block';info.innerHTML='<strong>No. '+c.complaintId+' · '+c.serial+'</strong> · '+c.batteryModel+' · '+c.custName;
+}
+
+function saveCharging(){
+  var id=v('ch-sel'),dt=v('ch-date'),volt=v('ch-volt');
+  if(!id||!dt||!volt){setMsg('ch-msg','Please fill all required fields.','err');return;}
+  db.collection('complaints').doc(id).update({chargingStartDate:dt,initialVoltage:volt,chargingRemarks:v('ch-remarks'),updatedAt:TS()})
+    .then(function(){setMsg('ch-msg','Battery marked as sent for charging.','ok');el('ch-sel').selectedIndex=0;el('ch-comp-info').style.display='none';['ch-date','ch-volt','ch-remarks'].forEach(function(x){var e=el(x);if(e)e.value='';});})
+    .catch(function(e){setMsg('ch-msg','Error: '+e.message,'err');});
+}
+
+function saveChargeDone(){
+  var id=v('chd-sel'),dt=v('chd-date'),volt=v('chd-volt');
+  if(!id||!dt||!volt){setMsg('chd-msg','Please fill all required fields.','err');return;}
+  db.collection('complaints').doc(id).update({stage:'Testing Pending',chargedDate:dt,finalVoltage:volt,chargingDoneRemarks:v('chd-remarks'),updatedAt:TS()})
+    .then(function(){setMsg('chd-msg','Fully charged. Moved to Testing Pending.','ok');el('chd-sel').selectedIndex=0;['chd-date','chd-volt','chd-remarks'].forEach(function(x){var e=el(x);if(e)e.value='';});})
+    .catch(function(e){setMsg('chd-msg','Error: '+e.message,'err');});
+}
+
+function rendChargingJobs(){
+  var list=complaints.filter(function(c){return c.chargingStartDate;}).slice(0,25);
+  var tb=el('ch-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="9" class="empty">No charging records.</td></tr>';return;}
+  tb.innerHTML=list.map(function(c){return'<tr><td style="font-weight:700;color:#1a3a6b;">'+c.complaintId+'</td><td style="font-weight:600;">'+c.serial+'</td><td>'+c.custName+'</td><td style="font-size:12px;">'+c.batteryModel+'</td><td>'+fd(c.chargingStartDate)+'</td><td>'+(c.initialVoltage?c.initialVoltage+' V':'—')+'</td><td>'+fd(c.chargedDate)+'</td><td>'+(c.finalVoltage?c.finalVoltage+' V':'—')+'</td><td>'+stageBdg(c.chargedDate?'Testing Pending':'Charging')+'</td></tr>';}).join('');
+}
+
+// ── REPLACEMENT ──
+function selectRoute(route){
+  currentRoute=route;
+  el('route-direct').className='route-opt'+(route==='direct'?' selected-green':'');
+  el('route-company').className='route-opt'+(route==='company'?' selected':'');
+  el('direct-fields').style.display=route==='direct'?'block':'none';
+  el('company-fields').style.display=route==='company'?'block':'none';
+}
+
+function loadReplComp(){
+  var id=v('r-sel');currentRoute='';
+  el('r-comp-info').style.display='none';el('r-warranty-info').style.display='none';
+  el('r-route-section').style.display='none';el('direct-fields').style.display='none';el('company-fields').style.display='none';
+  el('prorata-section').style.display='none';el('r-print-btn').style.display='none';
+  el('route-direct').className='route-opt';el('route-company').className='route-opt';
+  if(!id)return;
+  var c=complaints.find(function(x){return x.id===id;});if(!c)return;
+  var wp=getWarrantyPeriod(c);
+  el('r-comp-info').style.display='block';el('r-comp-info').className='ibox';
+  el('r-comp-info').innerHTML='<strong>No. '+c.complaintId+' · '+c.serial+'</strong> · '+c.batteryModel+' · '+c.custName+(c.custPhone?' ('+c.custPhone+')':'')+' · Dealer: '+c.dealerName+'<br>Test: <strong>'+c.testReportType+'</strong> → Result: <strong>'+c.testResult+'</strong> on '+fd(c.testDate);
+  el('r-warranty-info').style.display='block';
+  el('r-warranty-info').className=wp.type==='Free'?'sbox':wp.type==='ProRata'?'wbox':'ebox';
+  el('r-warranty-info').innerHTML=wp.type==='Free'?'<strong>Free Replacement Period</strong> — No amount to be charged to customer. Free replacement valid until: '+fd(wp.freeExpiry):wp.type==='ProRata'?'<strong>Pro-Rata Period</strong> — Customer to be charged proportionally. Free period ended: '+fd(wp.freeExpiry)+' | Total warranty until: '+fd(wp.totalExpiry):'<strong>Warranty Expired</strong> — Outside warranty period. Total warranty was until: '+fd(wp.totalExpiry);
+  el('r-type-display').value=wp.type==='Free'?'FREE REPLACEMENT':wp.type==='ProRata'?'PRO-RATA REPLACEMENT':'EXPIRED WARRANTY';
+  if(wp.type==='ProRata'){
+    el('prorata-section').style.display='block';
+    var pr=calcProRata(c,wp);
+    if(pr)el('prorata-details').innerHTML='MRP: ₹'+pr.mrp+' | Used: '+pr.usedDays+' of '+pr.totalDays+' days ('+pr.usedPct+'%) | <strong>Suggested charge: ₹'+pr.charged+'</strong>';
+    if(pr&&el('r-amount'))el('r-amount').value=pr.charged;
+  }
+  el('r-route-section').style.display='block';
+}
+
+function saveReplacement(){
+  var id=v('r-sel'),ns=v('r-newserial'),nm=v('r-newmodel'),rd=v('r-date');
+  if(!id||!ns||!nm||!rd){setMsg('repl-msg','Please fill all required fields.','err');return;}
+  var c=complaints.find(function(x){return x.id===id;});if(!c)return;
+  var wp=getWarrantyPeriod(c),amt=wp.type==='ProRata'?v('r-amount'):'0';
+  db.collection('complaints').doc(id).update({
+    stage:'Direct Replacement Done',replDone:true,replacementRoute:'Direct',
+    newSerial:ns,newModel:nm,replacementDate:rd,
+    replacementType:wp.type,proRataAmount:amt,replacementRemarks:v('r-remarks'),updatedAt:TS()
+  }).then(function(){
+    setMsg('repl-msg','Direct replacement saved! Generating receiving copy...','ok');
+    el('r-print-btn').style.display='inline-block';
+    genReceivingDoc(id);
+  }).catch(function(e){setMsg('repl-msg','Error: '+e.message,'err');});
+}
+
+function saveCompanyRoute(){
+  var id=v('r-sel');if(!id){setMsg('repl-co-msg','Please select a complaint.','err');return;}
+  db.collection('complaints').doc(id).update({stage:'For Replacement',replacementRoute:'Company',readyForDispatch:true,companyRouteRemarks:v('r-co-remarks'),updatedAt:TS()})
+    .then(function(){setMsg('repl-co-msg','Marked for company dispatch. Go to Dispatch tab to create a batch.','ok');el('r-sel').selectedIndex=0;loadReplComp();})
+    .catch(function(e){setMsg('repl-co-msg','Error: '+e.message,'err');});
+}
+
+function genReceivingDoc(id){
+  var c=complaints.find(function(x){return x.id===id;});if(!c)return;
+  var wp=getWarrantyPeriod(c);
+  var doc=el('receiving-doc'),wrap=el('receiving-print');
+  wrap.style.display='block';
+  doc.innerHTML='<div class="doc-inner">'+
+    '<div class="doc-hdr"><div class="doc-co">SF BATTERIES</div>'+
+    '<div style="font-size:12px;color:#888;">Shri Sai Traders — Authorised SF Battery Distributor</div>'+
+    '<div class="doc-title">WARRANTY REPLACEMENT — RECEIVING COPY</div>'+
+    '<div class="doc-ref">Complaint No.: <strong>'+c.complaintId+'</strong> &nbsp;|&nbsp; Date: '+fd(c.replacementDate||tod())+'</div></div>'+
+    '<table class="dtbl">'+
+      secHdr('Customer &amp; Dealer Details')+
+      r2('Customer Name','<strong>'+c.custName+'</strong>')+r2('Customer Phone',c.custPhone||'—')+r2('Customer Address',c.custAddr||'—')+
+      r2('Dealer Name',c.dealerName)+r2('Dealer Code',c.dealerCode||'—')+
+      secHdr('Original Battery Details')+
+      r2('Battery Model','<strong>'+c.batteryModel+'</strong>')+r2('Battery Serial No.','<strong>'+c.serial+'</strong>')+
+      r2('Invoice / Purchase Date',fd(c.invoiceDate))+r2('Date of Sale',fd(c.saleDate))+
+      r2('Complaint Date',fd(c.complaintDate))+r2('Complaint Type',c.complaintType||'—')+
+      secHdr('Test Report Details')+
+      r2('Report Type',c.testReportType||'—')+r2('Test Result','<strong>'+c.testResult+'</strong>')+r2('Test Date',fd(c.testDate))+
+      secHdr('Replacement Details')+
+      r2('Replacement Type','<strong style="color:'+(wp.type==='Free'?'#155724':'#784212')+'">'+c.replacementType+' REPLACEMENT</strong>')+
+      r2('New Battery Model','<strong>'+(c.newModel||'—')+'</strong>')+
+      r2('New Battery Serial No.','<strong>'+(c.newSerial||'—')+'</strong>')+
+      r2('Replacement Date',fd(c.replacementDate))+
+      (c.replacementType==='ProRata'?r2('Amount Charged to Customer','<strong>₹'+c.proRataAmount+'</strong>'):r2('Amount Charged','NIL — Free Replacement'))+
+    '</table>'+
+    '<div class="sig-row"><div class="sig-box">Customer Signature &amp; Date</div><div class="sig-box">Dealer Signature &amp; Date</div><div class="sig-box">Authorised Signatory<br>Shri Sai Traders</div></div>'+
+    '<div class="stamp">Company Stamp / Seal</div></div>';
+}
+
+function printReceiving(){window.print();}
+
+function rendReplacements(){
+  var srch=v('repl-srch').toLowerCase(),rf=v('repl-route-f');
+  var list=complaints.filter(function(c){return c.replDone||c.readyForDispatch||c.replacementRoute;});
+  list=list.filter(function(c){
+    var s=(c.complaintId+c.serial+c.custName+'').toLowerCase();
+    return(!srch||s.includes(srch))&&(!rf||c.replacementRoute===rf);
+  });
+  var tb=el('repl-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="9" class="empty">No replacements processed yet.</td></tr>';return;}
+  tb.innerHTML=list.map(function(c){return'<tr>'+
+    '<td style="font-weight:700;color:#1a3a6b;">'+c.complaintId+'</td>'+
+    '<td style="font-weight:600;">'+c.serial+'</td>'+
+    '<td>'+(c.newSerial||'—')+'</td>'+
+    '<td>'+c.custName+'</td>'+
+    '<td style="font-size:12px;">'+c.batteryModel+'</td>'+
+    '<td>'+fd(c.replacementDate||'—')+'</td>'+
+    '<td><span class="bdg '+(c.replacementRoute==='Direct'?'b-direct':'b-dispatched')+'">'+(c.replacementRoute||'—')+'</span></td>'+
+    '<td>'+(c.replacementType?'<span class="bdg '+(c.replacementType==='Free'?'bfree':'bpro')+'">'+c.replacementType+'</span>':'—')+'</td>'+
+    '<td>'+(c.replDone?'<button class="btn bsm btno" onclick="reprintDoc(\''+c.id+'\')">Print</button>':'—')+'</td>'+
+  '</tr>';}).join('');
+}
+
+function reprintDoc(id){genReceivingDoc(id);setTimeout(function(){window.print();},300);}
+
+// ── DISPATCH ──
+function getChallanNum(){
+  return db.runTransaction(function(tx){
+    var ref=db.collection('meta').doc('challanCounter');
+    return tx.get(ref).then(function(doc){
+      var next=doc.exists?(doc.data().count||0)+1:1;
+      tx.set(ref,{count:next},{merge:true});
+      return next;
+    });
+  });
+}
+
+function formatChallanNo(n){return'SST/26-27/CH'+String(n).padStart(3,'0');}
+
+function toggleAllDp(cb){document.querySelectorAll('.dp-chk').forEach(function(c){c.checked=cb.checked;});}
+
+function rendDpReady(){
+  var list=complaints.filter(function(c){return c.ticketNo&&!c.dispatchBatchId;});
+  var cnt=el('dp-ready-count');if(cnt)cnt.textContent='— '+list.length+' ready';
+  var tb=el('dp-ready-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="10" class="empty">No batteries ready for dispatch. Assign a Ticket Number via WA Quick Register first.</td></tr>';return;}
+  tb.innerHTML=list.map(function(c,i){
+    var isGood=c.stage==='Good Battery - Returned';
+    return'<tr>'+
+      '<td><input type="checkbox" class="dp-chk" value="'+c.id+'" style="width:auto;"></td>'+
+      '<td style="font-weight:700;color:#1a3a6b;">'+c.complaintId+'</td>'+
+      '<td style="font-weight:600;color:#1a3a6b;">'+c.ticketNo+'</td>'+
+      '<td style="font-size:12px;">'+c.batteryModel+'</td>'+
+      '<td style="font-size:12px;">'+c.serial+'</td>'+
+      '<td style="font-size:12px;">'+(isGood?'—':(c.newModel||'—'))+'</td>'+
+      '<td style="font-size:12px;">'+(isGood?'—':(c.newSerial||'—'))+'</td>'+
+      '<td>'+c.custName+'</td>'+
+      '<td>'+c.dealerName+'</td>'+
+      '<td>'+(c.warrantyType?'<span class="bdg '+(c.warrantyType==='Free'?'bfree':'bpro')+'">'+c.warrantyType+'</span>':'—')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function saveDispatch(){
+  var dt=v('dp-date'),trans=v('dp-transport'),vehicle=v('dp-vehicle');
+  if(!dt||!trans||!vehicle){setMsg('dp-msg','Please fill Challan Date, Transporter Name and Vehicle Number.','err');return;}
+  var checked=[];
+  document.querySelectorAll('.dp-chk:checked').forEach(function(cb){checked.push(cb.value);});
+  if(!checked.length){setMsg('dp-msg','Please select at least one battery to dispatch.','err');return;}
+  getChallanNum().then(function(num){
+    var challanNo=formatChallanNo(num);
+    var batchData={challanNo:challanNo,challanNum:num,dispatchDate:dt,transporter:trans,vehicleNo:vehicle,
+      ewayBill:v('dp-eway'),remarks:v('dp-remarks'),complaintIds:checked,createdAt:TS(),createdBy:auth.currentUser?auth.currentUser.email:''};
+    return db.collection('dispatches').add(batchData).then(function(ref){
+      var batch=db.batch();
+      checked.forEach(function(cid){
+        batch.update(db.collection('complaints').doc(cid),{stage:'Dispatched to Company',dispatchBatchId:ref.id,dispatchDate:dt,challanNo:challanNo,readyForDispatch:false,updatedAt:TS()});
+      });
+      return batch.commit().then(function(){return{id:ref.id,challanNo:challanNo};});
+    });
+  }).then(function(res){
+    setMsg('dp-msg','Delivery Challan '+res.challanNo+' created! Opening print...','ok');
+    ['dp-date','dp-transport','dp-vehicle','dp-eway','dp-remarks'].forEach(function(x){var e=el(x);if(e)e.value='';});
+    var allCb=el('dp-select-all');if(allCb)allCb.checked=false;
+    setTimeout(function(){printDeliveryChallan(res.id);},800);
+  }).catch(function(e){setMsg('dp-msg','Error: '+e.message,'err');});
+}
+
+function rendDispatches(){
+  var tb=el('dp-tbody');if(!tb)return;
+  if(!dispatches.length){tb.innerHTML='<tr><td colspan="7" class="empty">No delivery challans yet.</td></tr>';return;}
+  tb.innerHTML=dispatches.map(function(d){return'<tr>'+
+    '<td style="font-weight:700;color:#1a3a6b;">'+(d.challanNo||d.id.slice(-6))+'</td>'+
+    '<td>'+fd(d.dispatchDate)+'</td>'+
+    '<td>'+(d.ewayBill||'—')+'</td>'+
+    '<td>'+d.transporter+'</td>'+
+    '<td>'+(d.vehicleNo||'—')+'</td>'+
+    '<td style="font-weight:600;">'+(d.complaintIds?d.complaintIds.length:0)+' batteries</td>'+
+    '<td><button class="btn bsm btnp" onclick="printDeliveryChallan(\''+d.id+'\')">Print Challan</button></td>'+
+  '</tr>';}).join('');
+  rendDpReady();
+}
+
+function exportDispatchExcel(){
+  var list=complaints.filter(function(c){return c.ticketNo&&!c.dispatchBatchId;});
+  if(!list.length){alert('No batteries ready for dispatch export.');return;}
+  var rows=[['Serial No.','Complaint No.','Complaint Battery Model','Complaint Battery Serial No.','Replacement Battery Model','Replacement Battery Serial No.']];
+  list.forEach(function(c,i){
+    var isGood=c.stage==='Good Battery - Returned';
+    rows.push([i+1,c.complaintId||'',c.batteryModel||'',c.serial||'',
+      isGood?'—':(c.newModel||''),isGood?'—':(c.newSerial||'')]);
+  });
+  csvDownload(rows,'SF_Battery_Dispatch_Ready_'+tod()+'.csv');
+}
+
+function printDeliveryChallan(batchId){
+  var d=dispatches.find(function(x){return x.id===batchId;});if(!d)return;
+  var batteries=(d.complaintIds||[]).map(function(cid){return complaints.find(function(x){return x.id===cid;});}).filter(Boolean);
+  // Count by type
+  var auto=batteries.filter(function(b){return b.batteryType==='Automotive (Car/Truck)'||b.batteryType==='Tractor';}).length;
+  var moto=batteries.filter(function(b){return b.batteryType==='Two-Wheeler';}).length;
+  var inv=batteries.filter(function(b){return b.batteryType==='Inverter/UPS'||b.batteryType==='HUPS';}).length;
+  var others=batteries.length-auto-moto-inv;
+  var win=window.open('','_blank');if(!win)return;
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Delivery Challan - '+(d.challanNo||'')+'</title>'+
+  '<style>'+
+  'body{font-family:Arial,sans-serif;padding:20px;font-size:12px;color:#000;}'+
+  'h1{text-align:center;font-size:18px;margin-bottom:16px;font-weight:700;}'+
+  '.header-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #000;margin-bottom:0;}'+
+  '.hcell{padding:5px 8px;border-bottom:1px solid #000;font-size:12px;}'+
+  '.hcell:nth-child(odd){border-right:1px solid #000;}'+
+  '.hcell strong{display:inline;}'+
+  '.consignor-box{display:grid;grid-template-columns:1fr 1fr;border:1px solid #000;border-top:none;margin-bottom:0;}'+
+  '.cb{padding:6px 8px;font-size:12px;}'+
+  '.cb:first-child{border-right:1px solid #000;}'+
+  '.cb-label{font-weight:700;margin-bottom:4px;}'+
+  'table{width:100%;border-collapse:collapse;margin-top:0;font-size:12px;}'+
+  'th{border:1px solid #000;padding:6px 8px;text-align:center;font-weight:700;background:#f0f0f0;}'+
+  'td{border:1px solid #000;padding:5px 8px;text-align:center;vertical-align:middle;}'+
+  'td:nth-child(4),td:nth-child(5),td:nth-child(6),td:nth-child(7){text-align:left;}'+
+  '.footer{margin-top:12px;font-size:11px;}'+
+  '.sig-row{display:flex;gap:40px;margin-top:30px;}'+
+  '.sig-b{border-top:1px solid #000;padding-top:5px;width:180px;text-align:center;font-size:11px;}'+
+  '.note{margin-top:10px;font-size:11px;text-align:center;font-style:italic;}'+
+  '@media print{button{display:none!important;}.no-print{display:none!important;}}'+
+  '</style></head><body>'+
+  '<button class="no-print" onclick="window.print()" style="margin-bottom:12px;padding:8px 18px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">&#9113; Print Challan</button>'+
+  '<h1>Delivery Challan</h1>'+
+  '<div class="header-grid">'+
+    '<div class="hcell"><strong>Delivery Challan No.:</strong> '+(d.challanNo||'—')+'</div>'+
+    '<div class="hcell"><strong>E-way bill No. :</strong> '+(d.ewayBill||'—')+'</div>'+
+    '<div class="hcell" style="border-bottom:none;"><strong>Delivery Challan Date:</strong> '+fd(d.dispatchDate)+'</div>'+
+    '<div class="hcell" style="border-bottom:none;"><strong>Transporter:</strong> '+d.transporter+' &nbsp;|&nbsp; <strong>Vehicle:</strong> '+(d.vehicleNo||'—')+'</div>'+
+  '</div>'+
+  '<div class="consignor-box">'+
+    '<div class="cb"><div class="cb-label">Consignor Name: Shri Sai Traders</div>Address: Adityapur, Jamshedpur<br>GSTIN: 20CDGPN6795N1ZX</div>'+
+    '<div class="cb"><div class="cb-label">Consignee Name: Exide Industries Ltd</div>Address: Rampur, Ranchi<br>GSTIN: 20AAACE6641E1Z9</div>'+
+  '</div>'+
+  '<table>'+
+    '<thead><tr>'+
+      '<th>Sl. No.</th>'+
+      '<th>SHRI SAI TRADERS<br>SL. NO.</th>'+
+      '<th>Ticket<br>Number</th>'+
+      '<th>Battery Model</th>'+
+      '<th>Claim Battery<br>Serial No</th>'+
+      '<th>Replacement<br>Battery Model</th>'+
+      '<th>Replacement Battery<br>Serial No</th>'+
+    '</tr></thead>'+
+    '<tbody>'+
+    batteries.map(function(c,i){
+      var isGood=c.stage==='Good Battery - Returned';
+      return'<tr>'+
+        '<td>'+(i+1)+'</td>'+
+        '<td style="font-weight:700;">'+c.complaintId+'</td>'+
+        '<td style="font-weight:600;color:#1a3a6b;">'+c.ticketNo+'</td>'+
+        '<td>'+c.batteryModel+'</td>'+
+        '<td>'+c.serial+'</td>'+
+        '<td>'+(isGood?'—':(c.newModel||'—'))+'</td>'+
+        '<td>'+(isGood?'—':(c.newSerial||'—'))+'</td>'+
+      '</tr>';
+    }).join('')+
+    '</tbody>'+
+  '</table>'+
+  '<div class="footer">'+
+    '<div>AUTOMOTIVE = '+String(auto).padStart(2,'0')+'</div>'+
+    '<div>MOTORCYCLE = '+String(moto).padStart(2,'0')+'</div>'+
+    '<div>TUBULAR / INVERTER = '+String(inv).padStart(2,'0')+'</div>'+
+    (others?'<div>OTHERS = '+String(others).padStart(2,'0')+'</div>':'')+
+    '<div style="font-weight:700;margin-top:4px;">'+batteries.length+' Nos.</div>'+
+  '</div>'+
+  '<div class="sig-row">'+
+    '<div class="sig-b">Prepared By<br>Shri Sai Traders<br>&nbsp;</div>'+
+    '<div class="sig-b">Transporter Signature &amp; Date<br>(Receipt of '+batteries.length+' batteries)</div>'+
+    '<div class="sig-b">Company Acknowledgement<br>&nbsp;</div>'+
+  '</div>'+
+  '<div class="note">Note : All Batteries are sent for warranty claim purpose ; not for sale.</div>'+
+  '</body></html>');
+  win.document.close();
+}
+
+// ── RETURNS ──
+function openRcvModal(id){
+  var c=complaints.find(function(x){return x.id===id;});if(!c)return;
+  el('rcv-cid').value=id;
+  el('rcv-info').innerHTML='<strong>No. '+c.complaintId+' · '+c.serial+'</strong> · '+c.batteryModel+' · '+c.custName+' · Dispatched: '+fd(c.dispatchDate);
+  el('rcv-inv-no').value='';el('rcv-inv-date').value='';el('rcv-receipt-date').value='';el('rcv-remarks').value='';
+  el('rcv-msg').className='msg';el('rcv-msg').textContent='';
+  el('receiveModal').classList.add('show');
+}
+
+function closeRcvModal(){el('receiveModal').classList.remove('show');}
+
+function saveReceived(){
+  var id=el('rcv-cid').value,invNo=v('rcv-inv-no'),invDate=v('rcv-inv-date'),rcvDate=v('rcv-receipt-date');
+  if(!invNo||!invDate||!rcvDate){setMsg('rcv-msg','Please fill Invoice No., Invoice Date and Receipt Date.','err');return;}
+  db.collection('complaints').doc(id).update({stage:'Completed',receivedFromCompanyDate:rcvDate,companyInvoiceNo:invNo,companyInvoiceDate:invDate,receiptDate:rcvDate,receiptRemarks:v('rcv-remarks'),updatedAt:TS()})
+    .then(function(){setMsg('rcv-msg','Marked as received successfully!','ok');setTimeout(function(){closeRcvModal();},1000);})
+    .catch(function(e){setMsg('rcv-msg','Error: '+e.message,'err');});
+}
+
+function rendReturns(){
+  var srch=v('ret-srch').toLowerCase(),filt=v('ret-filter');
+  var list=complaints.filter(function(c){return c.dispatchBatchId;}).filter(function(c){
+    var s=(c.serial+c.custName+c.complaintId+'').toLowerCase();
+    var isPend=c.stage==='Dispatched to Company'||c.stage==='Pending from Company';
+    var isRec=c.stage==='Completed';
+    return(!srch||s.includes(srch))&&(filt==='pending'?isPend:filt==='received'?isRec:true);
+  });
+  var tb=el('ret-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="12" class="empty">No records found.</td></tr>';return;}
+  tb.innerHTML=list.map(function(c){
+    var days=c.dispatchDate?daysDiff(c.dispatchDate,tod()):0;
+    var isOv=days>7&&c.stage!=='Completed';
+    return'<tr class="'+(isOv?'overdue-row':'')+'">'+
+      '<td style="font-weight:700;color:#1a3a6b;">'+c.complaintId+'</td>'+
+      '<td style="font-weight:600;">'+c.serial+'</td>'+
+      '<td>'+c.custName+'</td>'+
+      '<td style="font-size:12px;">'+c.batteryModel+'</td>'+
+      '<td>'+fd(c.dispatchDate)+'</td>'+
+      '<td>'+(c.ticketNo||'—')+'</td>'+
+      '<td>'+days+' days'+(isOv?'<span class="overdue-badge">OVERDUE</span>':'')+'</td>'+
+      '<td>'+(c.companyInvoiceNo||'—')+'</td>'+
+      '<td>'+fd(c.companyInvoiceDate)+'</td>'+
+      '<td>'+fd(c.receiptDate)+'</td>'+
+      '<td>'+stageBdg(c.stage)+'</td>'+
+      '<td>'+(c.stage!=='Completed'?'<button class="btn btng bsm" onclick="openRcvModal(\''+c.id+'\')">Mark Received</button>':'<span style="color:#155724;font-size:12px;font-weight:600;">&#10003; Done</span>')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+// ── OVERDUE ──
+function getOverdueBatteries(){
+  return complaints.filter(function(c){return c.dispatchBatchId&&c.stage!=='Completed'&&c.dispatchDate&&daysDiff(c.dispatchDate,tod())>7;});
+}
+
+function rendOverdue(){
+  var list=getOverdueBatteries();
+  el('overdue-count').textContent=list.length+' batter'+(list.length===1?'y':'ies')+' overdue (pending &gt;7 days from company)';
+  var tb=el('overdue-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="9" class="empty" style="color:#1a7a4a;">No overdue batteries. All good!</td></tr>';return;}
+  tb.innerHTML=list.map(function(c){
+    var days=daysDiff(c.dispatchDate,tod());
+    return'<tr class="overdue-row">'+
+      '<td style="font-weight:700;color:#c0392b;font-size:15px;">'+c.complaintId+'</td>'+
+      '<td style="font-weight:600;">'+c.serial+'</td>'+
+      '<td>'+c.custName+'</td>'+
+      '<td>'+c.dealerName+'</td>'+
+      '<td style="font-size:12px;">'+c.batteryModel+'</td>'+
+      '<td>'+fd(c.dispatchDate)+'</td>'+
+      '<td>'+(c.ticketNo||'—')+'</td>'+
+      '<td style="font-weight:700;color:#c0392b;">'+days+' days<span class="overdue-badge">OVERDUE</span></td>'+
+      '<td>'+stageBdg(c.stage)+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function exportOverdue(){
+  var list=getOverdueBatteries();
+  if(!list.length){alert('No overdue batteries to export.');return;}
+  var rows=[['Complaint No.','Serial No.','Customer Name','Customer Phone','Dealer Name','Battery Model','Dispatch Date','WhatsApp Ticket No.','Days Pending','Stage','Warranty Type']];
+  list.forEach(function(c){rows.push([c.complaintId,c.serial,c.custName,c.custPhone||'',c.dealerName,c.batteryModel,c.dispatchDate||'',c.ticketNo||'',daysDiff(c.dispatchDate,tod()),c.stage,c.warrantyType||'']);});
+  var csv=rows.map(function(r){return r.map(function(x){return'"'+String(x).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SF_Battery_Overdue_'+tod()+'.csv';a.click();
+}
+
+// ── MODELS ──
+function saveModel(){
+  var name=v('mod-name'),type=v('mod-type'),free=v('mod-free');
+  if(!name||!type||!free){setMsg('mod-msg','Please fill all required fields.','err');return;}
+  db.collection('batteryModels').add({name:name,battType:type,freeMonths:parseInt(free),proMonths:parseInt(v('mod-pro'))||0,mrp:v('mod-price')||null,createdAt:TS()})
+    .then(function(){setMsg('mod-msg','Model "'+name+'" added.','ok');['mod-name','mod-type','mod-free','mod-pro','mod-price'].forEach(function(id){var e=el(id);if(e){if(e.tagName==='SELECT')e.selectedIndex=0;else e.value='';}});el('mod-total').value='';})
+    .catch(function(e){setMsg('mod-msg','Error: '+e.message,'err');});
+}
+
+function rendModels(){
+  var tb=el('mod-tbody');if(!tb)return;
+  if(!models.length){tb.innerHTML='<tr><td colspan="6" class="empty">No models yet. Add battery models before logging complaints.</td></tr>';return;}
+  tb.innerHTML=models.map(function(m){return'<tr>'+
+    '<td style="font-weight:600;">'+m.name+'</td><td style="font-size:12px;">'+m.battType+'</td>'+
+    '<td><span class="bdg bfree">'+m.freeMonths+' months</span></td>'+
+    '<td><span class="bdg bpro">'+(m.proMonths||0)+' months</span></td>'+
+    '<td style="font-weight:700;">'+(parseInt(m.freeMonths)+parseInt(m.proMonths||0))+' months</td>'+
+    '<td>'+(m.mrp?'₹'+m.mrp:'—')+'</td></tr>';}).join('');
+}
+
+// ── DEALERS ──
+function saveDealer(){
+  var n=v('dl-name');if(!n){setMsg('dl-msg','Name is required.','err');return;}
+  db.collection('dealers').add({name:n,code:v('dl-code'),phone:v('dl-phone'),addr:v('dl-addr'),createdAt:TS()})
+    .then(function(){setMsg('dl-msg','Dealer "'+n+'" added.','ok');['dl-name','dl-code','dl-phone','dl-addr'].forEach(function(id){var e=el(id);if(e)e.value='';});})
+    .catch(function(e){setMsg('dl-msg','Error: '+e.message,'err');});
+}
+
+function rendDealers(){
+  var q=v('dl-srch').toLowerCase();
+  var list=dealers.filter(function(d){return!q||(d.name+d.code+d.phone+'').toLowerCase().includes(q);});
+  var tb=el('dl-tbody');if(!tb)return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="4" class="empty">No dealers yet.</td></tr>';return;}
+  tb.innerHTML=list.map(function(d){return'<tr><td style="font-weight:600;">'+d.name+'</td><td>'+(d.code||'—')+'</td><td>'+(d.phone||'—')+'</td><td>'+(d.addr||'—')+'</td></tr>';}).join('');
+}
+
+// ── FULL BACKUP EXPORT ──
+function exportFullBackup(){
+  if(!complaints.length&&!models.length&&!dealers.length){alert('No data to export yet.');return;}
+  var wb=[]; // will hold multiple sheets as separate CSVs in one zip-like download
+
+  // Sheet 1: All Complaints (full)
+  var rows1=[['Complaint No.','Ticket No.','Customer Name','Mobile','Dealer Name','Dealer Code','Battery Model','Battery Type',
+    'Complaint Battery Serial No.','Invoice Date','Date of Sale','Complaint Date','Complaint Type','Battery Condition',
+    'Test Report Type','Test Result','Test Date','Warranty Type','Replacement Route','Replacement Type',
+    'Replacement Battery Model','Replacement Battery Serial No.','Replacement Date','Pro-Rata Amount (₹)',
+    'Dispatch Date','Challan No.','Company Invoice No.','Company Invoice Date','Receipt Date','Stage','Remarks']];
+  complaints.forEach(function(c){
+    var isGood=c.stage==='Good Battery - Returned';
+    rows1.push([
+      c.complaintId||'', c.ticketNo||'', c.custName||'', c.custPhone||'', c.dealerName||'', c.dealerCode||'',
+      c.batteryModel||'', c.batteryType||'', c.serial||'', c.invoiceDate||'', c.saleDate||'', c.complaintDate||'',
+      c.complaintType||'', c.condition||'', c.testReportType||'', c.testResult||'', c.testDate||'',
+      c.warrantyType||'', c.replacementRoute||'', c.replacementType||'',
+      isGood?'Good Battery':(c.newModel||''), isGood?'Good Battery':(c.newSerial||''),
+      c.replacementDate||'', c.proRataAmount||'',
+      c.dispatchDate||'', c.challanNo||'', c.companyInvoiceNo||'', c.companyInvoiceDate||'', c.receiptDate||'',
+      c.stage||'', c.remarks||''
+    ]);
+  });
+
+  // Sheet 2: Battery Models
+  var rows2=[['Model Name','Battery Type','Free Replacement (months)','Pro-Rata (months)','Total Warranty (months)','MRP (₹)']];
+  models.forEach(function(m){
+    rows2.push([m.name||'',m.battType||'',m.freeMonths||0,m.proMonths||0,(parseInt(m.freeMonths||0)+parseInt(m.proMonths||0)),m.mrp||'']);
+  });
+
+  // Sheet 3: Dealers
+  var rows3=[['Dealer Name','Code','Phone','Address']];
+  dealers.forEach(function(d){rows3.push([d.name||'',d.code||'',d.phone||'',d.addr||'']);});
+
+  // Sheet 4: Dispatches
+  var rows4=[['Challan No.','Dispatch Date','Transporter','Vehicle No.','E-Way Bill','No. of Batteries','Complaint IDs']];
+  dispatches.forEach(function(d){
+    rows4.push([d.challanNo||'',d.dispatchDate||'',d.transporter||'',d.vehicleNo||'',d.ewayBill||'',
+      (d.complaintIds?d.complaintIds.length:0),(d.complaintIds||[]).join(', ')]);
+  });
+
+  // Combine all sheets into one CSV with section separators
+  var now=new Date();
+  var ts=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var sep=function(title){return[[],['=== '+title+' ===',''],[]];}
+  var all=[
+    ['SF BATTERY WARRANTY SYSTEM — FULL BACKUP'],
+    ['Shri Sai Traders'],
+    ['Exported on: '+ts],
+    ['Total Complaints: '+complaints.length+' | Models: '+models.length+' | Dealers: '+dealers.length],
+    []
+  ].concat(sep('COMPLAINTS ('+complaints.length+' records)')).concat(rows1)
+   .concat(sep('BATTERY MODELS ('+models.length+' records)')).concat(rows2)
+   .concat(sep('DEALERS ('+dealers.length+' records)')).concat(rows3)
+   .concat(sep('DISPATCH CHALLANS ('+dispatches.length+' records)')).concat(rows4);
+
+  var fname='SF_Battery_FULL_BACKUP_'+tod()+'.csv';
+  csvDownload(all,fname);
+
+  // Update last export time
+  var lx=el('last-export-time');if(lx)lx.textContent=ts;
+  var bm=el('backup-msg');if(bm){bm.style.display='block';bm.textContent='✓ Full backup exported: '+fname+' — Save this file to Google Drive now!';}
+  setTimeout(function(){var bm=el('backup-msg');if(bm)bm.style.display='none';},6000);
+}
+
+function exportComplaintsOnly(){
+  if(!complaints.length){alert('No complaints to export.');return;}
+  var rows=[['Complaint No.','Ticket No.','Customer Name','Mobile Number','Dealer Name',
+    'Complaint Battery Model','Complaint Battery Serial No.','Date of Sale',
+    'Replacement Battery Model','Replacement Battery Serial No.','Company Invoice No.','Invoice Date']];
+  complaints.forEach(function(c){
+    var isGood=c.stage==='Good Battery - Returned';
+    rows.push([c.complaintId||'',c.ticketNo||'',c.custName||'',c.custPhone||'',c.dealerName||'',
+      c.batteryModel||'',c.serial||'',c.saleDate||'',
+      isGood?'Good Battery':(c.newModel||''),isGood?'Good Battery':(c.newSerial||''),
+      c.companyInvoiceNo||'',c.companyInvoiceDate||'']);
+  });
+  csvDownload(rows,'SF_Battery_Complaints_'+tod()+'.csv');
+}
+function updFYLabels(){
+  var now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  var fyStart=m>=3?y:y-1;
+  var fyEnd=fyStart+1;
+  var prevStart=fyStart-1,prevEnd=fyStart;
+  var b1=el('btn-this-fy'),b2=el('btn-last-fy');
+  if(b1)b1.textContent='This FY ('+String(fyStart).slice(2)+'-'+String(fyEnd).slice(2)+')';
+  if(b2)b2.textContent='Last FY ('+String(prevStart).slice(2)+'-'+String(prevEnd).slice(2)+')';
+}
+
+updClock();setInterval(updClock,60000);
+updFYLabels();
+
+// ── WA QUICK REGISTER ──
+var SF_WA_NUMBER='918583085830';
+var SAP_CODE='55008853';
+var waComp=null;
+var waTotalSteps=6;
+var waDoneSteps=0;
+
+function getSegment(battType){
+  var m={'Automotive (Car/Truck)':'4 Wheeler','Two-Wheeler':'2 Wheeler','Inverter/UPS':'Inverter','Tractor':'4 Wheeler','E-Rickshaw':'E-Rickshaw','HUPS':'HUPS'};
+  return m[battType]||'4 Wheeler';
+}
+
+function loadWASel(){
+  var sel=el('wa-sel');if(!sel)return;
+  var list=complaints.filter(function(c){return c.stage==='For Replacement'||c.readyForDispatch||c.stage==='Dispatched to Company';});
+  sel.innerHTML='<option value="">— Select Complaint —</option>'+list.map(function(c){return'<option value="'+c.id+'">'+c.complaintId+' · '+c.serial+' · '+c.custName+(c.ticketNo?' ✓ Ticket: '+c.ticketNo:'')+'</option>';}).join('');
+}
+
+function loadWAComp(){
+  var id=v('wa-sel');
+  el('wa-assistant').style.display='none';el('wa-comp-preview').style.display='none';
+  el('wa-ticket-box').style.display='none';el('wa-success').style.display='none';
+  waDoneSteps=0;
+  if(!id)return;
+  waComp=complaints.find(function(x){return x.id===id;});
+  if(!waComp)return;
+  var wp=getWarrantyPeriod(waComp);
+  el('wa-comp-preview').style.display='block';
+  el('wa-comp-preview').innerHTML='<strong>No. '+waComp.complaintId+' · '+waComp.serial+'</strong> · '+waComp.batteryModel+' · '+waComp.custName+' · '+waComp.custPhone+' · Warranty: '+wBdg(wp.type)+(waComp.ticketNo?'<br><strong style="color:#1a7a4a;">&#10003; Already registered — Ticket: '+waComp.ticketNo+'</strong>':'');
+  el('wa-assistant').style.display='grid';
+  buildWAAnswers();
+  buildWASteps();
+  updWAProgress();
+}
+
+function buildWAAnswers(){
+  var c=waComp;
+  var isAuto=c.batteryType==='Automotive (Car/Truck)'||c.batteryType==='Tractor';
+  var firstName=c.custName.split(' ')[0];
+  var lastName=c.custName.split(' ').slice(1).join(' ')||'';
+  var rows=[
+    {label:'SAP Code',val:SAP_CODE},
+    {label:'Segment',val:getSegment(c.batteryType)},
+    {label:'Battery Status',val:c.condition||'Charged'},
+    {label:'Sold / Unsold',val:'Sold'},
+    {label:'Battery Serial No.',val:c.serial},
+    {label:'Vehicle Reg. No.',val:isAuto?(c.vehicleReg||''):'N/A'},
+    {label:'Customer Mobile No.',val:c.custPhone||''},
+    {label:'Customer First Name',val:firstName},
+    {label:'Customer Last Name',val:lastName||'(blank if single name)'},
+    {label:'Customer Pincode',val:'800001'},
+  ];
+  el('wa-answers').innerHTML=rows.map(function(r){
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f7fa;">'+
+      '<div style="font-size:12px;color:#888;font-weight:600;width:45%;">'+r.label+'</div>'+
+      '<div style="font-size:13px;font-weight:700;color:#1a3a6b;flex:1;text-align:right;">'+r.val+'</div>'+
+      '<button onclick="waCopy(this,\''+r.val.replace(/'/g,"\\'")+'\')" style="margin-left:8px;padding:3px 10px;font-size:11px;border:1px solid #d0d7e3;border-radius:5px;background:#fff;color:#1a3a6b;cursor:pointer;font-weight:600;flex-shrink:0;">Copy</button>'+
+    '</div>';
+  }).join('');
+}
+
+function waCopy(btn,val){
+  navigator.clipboard.writeText(val).catch(function(){var t=document.createElement('textarea');t.value=val;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);});
+  btn.textContent='✓ Copied';btn.style.background='#1a7a4a';btn.style.color='#fff';
+  setTimeout(function(){btn.textContent='Copy';btn.style.background='#fff';btn.style.color='#1a3a6b';},1500);
+}
+
+function buildWASteps(){
+  var c=waComp;
+  var seg=getSegment(c.batteryType);
+  var isAuto=c.batteryType==='Automotive (Car/Truck)'||c.batteryType==='Tractor';
+  var steps=[
+    {name:'Start Chat',inst:'Send <strong>"Hi"</strong> in WhatsApp → Bot welcomes you → Tap the <strong>"Register Complaint"</strong> button in the chat.'},
+    {name:'Enter SAP Code',inst:'Bot asks for SAP Code. Copy and send: <strong>'+SAP_CODE+'</strong><br>Bot confirms: <em>"Thanks SHRI SAI TRADERS"</em> and shows a segment selection button.'},
+    {name:'Fill Battery Details Form',inst:'Bot shows a form. Select/enter:<br>&#9679; Segment: <strong>'+seg+'</strong><br>&#9679; Battery Status: <strong>'+(c.condition||'Charged')+'</strong><br>&#9679; Sold/Unsold: <strong>Sold</strong><br>'+(isAuto?'&#9679; Vehicle Reg. No.: <strong>'+(c.vehicleReg||'Enter manually')+'</strong><br>':'')+'&#9679; Serial No.: <strong>'+c.serial+'</strong><br>Tap <strong>Submit</strong>.'},
+    {name:'Enter Customer Mobile No.',inst:'Bot asks for customer mobile number. Send: <strong>'+c.custPhone+'</strong><br><br>&#9679; If bot says <em>"customer already exists"</em> → tap below to skip to ticket step.<br>&#9679; If bot asks for customer name/pincode → tap "New Customer" below.',special:'mobile'},
+    {name:'New Customer Details (if asked)',inst:'Bot shows a form asking:<br>&#9679; First Name: <strong>'+c.custName.split(' ')[0]+'</strong><br>&#9679; Last Name: <strong>'+(c.custName.split(' ').slice(1).join(' ')||'—')+'</strong><br>&#9679; Pincode: <strong>800001</strong><br>Fill in and tap <strong>Submit</strong>.',optional:true},
+    {name:'Save Ticket Number',inst:'Bot sends you the Ticket Number in WhatsApp. Enter it in the box below and save.',isTicket:true},
+  ];
+  waTotalSteps=steps.length;
+  el('wa-steps').innerHTML=steps.map(function(s,i){
+    var isActive=i===0;
+    return'<div id="was-'+i+'" style="border:1px solid '+(isActive?'#1a3a6b':'#e8ecf3')+';border-radius:8px;margin-bottom:8px;overflow:hidden;background:'+(isActive?'#f7faff':'#fff')+';">'+
+      '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;">'+
+        '<div style="width:24px;height:24px;border-radius:50%;background:'+(isActive?'#1a3a6b':'#f0f2f5')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(isActive?'#fff':'#888')+';flex-shrink:0;" id="was-num-'+i+'">'+(i+1)+'</div>'+
+        '<div style="font-size:13px;font-weight:600;flex:1;">'+s.name+(s.optional?' <span style="font-size:10px;color:#888;font-weight:400;">(only if asked)</span>':'')+'</div>'+
+        '<span id="was-st-'+i+'" style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:'+(isActive?'#e8f4fd':'#f0f2f5')+';color:'+(isActive?'#1a3a6b':'#888')+'">'+(isActive?'Current':'Pending')+'</span>'+
+      '</div>'+
+      '<div id="was-body-'+i+'" style="display:'+(isActive?'block':'none')+';padding:0 12px 12px;">'+
+        '<div style="background:#f7f9fc;border-radius:7px;padding:9px 12px;font-size:13px;color:#444;line-height:1.7;margin-bottom:8px;">'+s.inst+'</div>'+
+        (s.special==='mobile'?
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
+          '<button onclick="waNext('+i+')" style="flex:1;padding:7px;background:#1a7a4a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">&#10003; Existing Customer — Skip to Ticket</button>'+
+          '<button onclick="waNextStep('+i+')" style="flex:1;padding:7px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">New Customer — Next Step</button>'+
+          '</div>':
+          s.isTicket?'':
+          '<button onclick="waNextStep('+i+')" style="width:100%;padding:7px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">&#10003; Done — Next Step</button>'
+        )+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function waNextStep(i){
+  // mark done
+  el('was-'+i).style.borderColor='#1a7a4a';el('was-'+i).style.background='#f8fffe';
+  el('was-num-'+i).style.background='#1a7a4a';el('was-num-'+i).textContent='✓';
+  el('was-st-'+i).textContent='✓ Done';el('was-st-'+i).style.background='#d1f3e0';el('was-st-'+i).style.color='#155724';
+  el('was-body-'+i).style.display='none';
+  waDoneSteps++;updWAProgress();
+  // activate next
+  var next=i+1;
+  if(next<waTotalSteps){
+    el('was-'+next).style.borderColor='#1a3a6b';el('was-'+next).style.background='#f7faff';
+    el('was-num-'+next).style.background='#1a3a6b';el('was-num-'+next).style.color='#fff';
+    el('was-st-'+next).textContent='Current';el('was-st-'+next).style.background='#e8f4fd';el('was-st-'+next).style.color='#1a3a6b';
+    el('was-body-'+next).style.display='block';
+    if(next===waTotalSteps-1){el('wa-ticket-box').style.display='block';}
+    el('was-'+next).scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+function waNext(i){
+  // skip new customer step (step 4), go to ticket (step 5)
+  waNextStep(i);
+  // skip step 4
+  var skip=el('was-4');
+  if(skip){skip.style.borderColor='#d0d7e3';var st=el('was-st-4');if(st){st.textContent='Skipped';}}
+  el('was-body-4').style.display='none';
+  waDoneSteps++;updWAProgress();
+  // activate step 5
+  var t=el('was-5');
+  if(t){t.style.borderColor='#1a3a6b';t.style.background='#f7faff';
+    el('was-num-5').style.background='#1a3a6b';el('was-num-5').style.color='#fff';
+    el('was-st-5').textContent='Current';el('was-st-5').style.background='#e8f4fd';el('was-st-5').style.color='#1a3a6b';
+    el('was-body-5').style.display='block';
+    el('wa-ticket-box').style.display='block';
+    t.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+function updWAProgress(){
+  var pct=Math.min(Math.round((waDoneSteps/waTotalSteps)*100),100);
+  el('wa-progress').style.width=pct+'%';
+}
+
+function saveWATicket(){
+  var ticket=el('wa-ticket-input').value.trim();
+  if(!ticket){alert('Please enter the ticket number from WhatsApp.');return;}
+  if(!waComp){return;}
+  db.collection('complaints').doc(waComp.id).update({ticketNo:ticket,ticketDate:tod(),updatedAt:TS()})
+    .then(function(){
+      el('wa-ticket-msg').style.display='block';
+      el('wa-ticket-msg').textContent='✓ Ticket '+ticket+' saved to complaint '+waComp.complaintId;
+      waNextStep(5);
+      setTimeout(function(){
+        el('wa-success-ticket').textContent=ticket;
+        el('wa-success').style.display='block';
+        el('wa-success').scrollIntoView({behavior:'smooth'});
+      },400);
+    })
+    .catch(function(e){alert('Error saving ticket: '+e.message);});
+}
+
+function openWA(){
+  window.open('https://web.whatsapp.com/send?phone='+SF_WA_NUMBER+'&text=Hi','_blank');
+}
+
+// patch go() to load WA selects
+var _origGo=go;
+go=function(id,btn){
+  _origGo(id,btn);
+  if(id==='waquick')loadWASel();
+};
+
+// patch loadAllSelects to include WA
+var _origLoadAll=loadAllSelects;
+loadAllSelects=function(){_origLoadAll();loadWASel();};
+</script>
+</body>
+</html>
